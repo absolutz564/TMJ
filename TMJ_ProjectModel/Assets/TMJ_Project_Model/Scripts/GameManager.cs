@@ -19,6 +19,16 @@ namespace NekraliusDevelopmentStudio
             if (Instance != null) DontDestroyOnLoad(Instance);
             else Instance = this;
         }
-        #endregion      
+        #endregion
+
+        private void Start()
+        {
+            DontDestroyOnLoad(gameObject);
+        }
+        private void OnValidate()
+        {
+            if (GetComponent<ConnectionManager>()) return;
+            else this.gameObject.AddComponent<ConnectionManager>();
+        }
     }
 }
