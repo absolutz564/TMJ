@@ -16,15 +16,15 @@ namespace NekraliusDevelopmentStudio
         public static GameManager Instance;
         void Awake()
         {
-            if (Instance != null) DontDestroyOnLoad(Instance);
-            else Instance = this;
+            if (Instance != null)
+            {
+                Destroy(Instance);
+                Instance = this;
+                DontDestroyOnLoad(this);
+            }
         }
         #endregion
 
-        private void Start()
-        {
-            DontDestroyOnLoad(gameObject);
-        }
         private void OnValidate()
         {
             if (GetComponent<ConnectionManager>()) return;

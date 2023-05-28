@@ -5,6 +5,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq.Expressions;
 using TMPro;
+using UnityEditor;
 using UnityEngine;
 using UnityEngine.UI;
 using UnityEngine.Video;
@@ -33,6 +34,7 @@ namespace NekraliusDevelopmentStudio
         public GameObject photoShower;
         public Image photoReceiver;
         public GameObject objectsToDesapear;
+        public GameObject frameObject;
         public int waitTimeToShow = 4;
         #endregion
 
@@ -43,7 +45,6 @@ namespace NekraliusDevelopmentStudio
         #endregion
 
         public GameObject photoTaker;
-        
 
         #region - Photo Take System Data -
         private string path;
@@ -63,30 +64,37 @@ namespace NekraliusDevelopmentStudio
 
             for (int i = timeToTakePhoto; i > 0; i--)
             {
-                if (i == 1) flashEffect.CallFlashEffect();
-
                 countDownText.gameObject.GetComponent<RescaleEffect>().StartEffect();
                 countDownText.gameObject.GetComponent<RescaleEffect>().ResetScale();
 
                 countDownText.text = i.ToString();
                 yield return new WaitForSeconds(1);
             }
+
             countDownText.gameObject.SetActive(false);
 
-            yield return new WaitForSeconds(1);
+            yield return new WaitForSeconds(1f);
+
             yield return new WaitForEndOfFrame();
             int width = Screen.width;
             int height = Screen.height;
 
+            frameObject.SetActive(true);
+
+            //yield return new WaitForSeconds(0.1f);
+
             Texture2D screenShotTexture = new Texture2D(width, height, TextureFormat.ARGB32, false);
             Rect rect = new Rect(0, 0, width, height);
+
+            yield return new WaitForEndOfFrame();
             screenShotTexture.ReadPixels(rect, 0, 0);
             screenShotTexture.Apply();
             screenShotTexture.EncodeToPNG();
 
             photoTexture = screenShotTexture;
 
-            yield return new WaitForSeconds(1);            
+            frameObject.SetActive(false);        
+            flashEffect.CallFlashEffect();
 
             ConvertPhoto(photoTexture);
             StartCoroutine(ShowPhoto());
@@ -102,6 +110,7 @@ namespace NekraliusDevelopmentStudio
         }
         IEnumerator ShowPhoto()
         {
+            QR_CodeGenerator.Instance.GenerateFinalHash();
             yield return new WaitForSeconds(waitTimeToShow);
             ConvertAndSend();
             objectsToDesapear.SetActive(false);
@@ -110,15 +119,19 @@ namespace NekraliusDevelopmentStudio
         }
         private void ConvertAndSend()
         {
+            QR_CodeGenerator.Instance.isActive = true;
+
             byte[] bytes = photoTexture.EncodeToPNG();
 
             string base64string = Convert.ToBase64String(bytes);
 
             try
             {
-                MySqlConnection currentConnection = new MySqlConnection(ConnectionManager.Instance.FindMyConnection("Dilis Main Database").GetConnectionString());
+                MySQL_Connection dillisBase = (MySQL_Connection)AssetDatabase.LoadAssetAtPath("Assets/TMJ_Project_Model/Scriptable Objects/Dilis Bases.asset", typeof(MySQL_Connection));
 
-                MySqlCommand currentComand = new MySqlCommand("insert into imgLibrary(hash, base64, projectName) values('" + QR_CodeGenerator.Instance.finalHash + "','" + base64string + "', 'TAMO JUNTO BARRA - NATAL')", currentConnection);
+                MySqlConnection currentConnection = new MySqlConnection(dillisBase.GetConnectionString());
+
+                MySqlCommand currentComand = new MySqlCommand("insert into imgLibrary(hash, base64, projectName) values('" + QR_CodeGenerator.Instance.generatedHash + "','" + base64string + "', 'TAMO JUNTO BARRA - BOTICARIO')", currentConnection);
 
                 currentConnection.Open();
 

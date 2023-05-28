@@ -1,20 +1,18 @@
-using System.Collections;
-using System.Collections.Generic;
+using MySql.Data.MySqlClient;
+using System;
+using System.Security.Cryptography;
+using UnityEditor;
 using UnityEngine;
 using UnityEngine.UI;
-using System.Security.Cryptography;
 using ZXing;
 using ZXing.QrCode;
-using Unity.VisualScripting;
-using System;
-using MySql.Data.MySqlClient;
 
 namespace NekraliusDevelopmentStudio
 {
     public class QR_CodeGenerator : MonoBehaviour
     {
         //Code made by Victor Paulo Melo da Silva - Game Developer - GitHub - https://github.com/Necralius
-        //CompleteCodeName - (Code Version)
+        //QR_CodeGenerator - (0.1)
         //Code State - (Needs Refactoring, Needs Coments, Needs Improvement)
         //This code represents (Code functionality or code meaning)
 
@@ -23,16 +21,16 @@ namespace NekraliusDevelopmentStudio
         private void Awake() => Instance = this;
         #endregion
 
-        private RawImage QR_CodeImageReceiver;
-        private Texture2D storedEncodedTexture;
+        [SerializeField] private RawImage QR_CodeImageReceiver;
+        public Texture2D storedEncodedTexture;
 
         private RNGCryptoServiceProvider rngCsp = new RNGCryptoServiceProvider();
-        public string key;
-        public string finalHash;
+        public string generatedHash;
 
-        public string currentLink;
-        public bool isActive = true;
+        public string finalLink;
+        public bool isActive = false;
 
+        #region - BuiltIn Methods -
         private void Start()
         {
             storedEncodedTexture = new Texture2D(256, 256);
@@ -44,21 +42,12 @@ namespace NekraliusDevelopmentStudio
                 EncondeTextToQR_Code();
                 ReadLink();
             }
+            else return;
         }
+        #endregion
 
-        private void EncondeTextToQR_Code()
-        {
-           // string currentLink = "https://teste.com/?id=" + finalHash;
-            string newLink = currentLink + finalHash;
-            Debug.Log(currentLink);
-
-            Color32[] convertPixelToTexture = Encode(currentLink, storedEncodedTexture.width, storedEncodedTexture.height);
-            storedEncodedTexture.SetPixels32(convertPixelToTexture);
-            storedEncodedTexture.Apply();
-
-            QR_CodeImageReceiver.texture = storedEncodedTexture;
-        }
-        private Color32[] Encode(string textForEncode, int width, int height)
+        #region - QrCode Generation -
+        private Color32[] Encode(string textForEncode, int width, int height) //This method return an array of pixels that 
         {
             BarcodeWriter writer = new BarcodeWriter
             {
@@ -71,13 +60,20 @@ namespace NekraliusDevelopmentStudio
             };
             return writer.Write(textForEncode);
         }
-
-        public void GenerateQrCode()
+        private void EncondeTextToQR_Code() //This method gets an string and enconde it on a 2D Texture  using the ZXing plugin.
         {
-            CriarKey();
-            CriarHash();
+            string linkAndHash = finalLink + generatedHash;
+
+            Color32[] convertPixelToTexture = Encode(linkAndHash, storedEncodedTexture.width, storedEncodedTexture.height);
+            storedEncodedTexture.SetPixels32(convertPixelToTexture);
+            storedEncodedTexture.Apply();
+
+            QR_CodeImageReceiver.texture = storedEncodedTexture;
         }
-        private void CriarKey()
+        #endregion
+
+        #region - Identification Hash Generation -
+        public void GenerateFinalHash() //This method uses cryptography to generates an random image hash to identify the current image on an extern API.
         {
             var characters = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
             var Charsarr = new char[8];
@@ -85,10 +81,8 @@ namespace NekraliusDevelopmentStudio
 
             for (int i = 0; i < Charsarr.Length; i++) Charsarr[i] = characters[random.Next(characters.Length)];
 
-            key = new String(Charsarr);
-        }
-        private void CriarHash()
-        {
+            string key = new String(Charsarr);
+
             byte[] salt = new byte[16];
             rngCsp.GetBytes(salt);
 
@@ -100,11 +94,12 @@ namespace NekraliusDevelopmentStudio
             Array.Copy(salt, 0, hashBytes, 0, 16);
             Array.Copy(hash, 0, hashBytes, 16, 20);
 
-            finalHash = ValidString(Convert.ToBase64String(hashBytes));
+            generatedHash = ValidString(Convert.ToBase64String(hashBytes));
 
-            Debug.Log("Hash corrigido " + finalHash);
+            //Debug.Log("Final Link -> " + finalLink + generatedHash); -> Debug option visualization
         }
-        string ValidString(string stringItem)
+
+        string ValidString(string stringItem) //This method removes every "+" symbol from a string for prevent API utilization errors.
         {
             string newString = "";
 
@@ -113,20 +108,32 @@ namespace NekraliusDevelopmentStudio
             return newString;
         }
 
-        private void ReadLink()
+        #endregion
+
+        #region - Application Link Get -
+        private void ReadLink() //This method uses an try catch block to get an link from and MySQL Database.
         {
-            MySqlConnection currentConnection = new MySqlConnection("Server=145.14.134.34;Database=DilisTmj;Uid=pedroDev;Pwd=H&QmFT7ax$2q;");
-            MySqlCommand getRelatedLink = new MySqlCommand("select linkAtrelado from links where ProjectOrigem = 'TAMO JUNTO - CAMPINENSE'", currentConnection);
+            try
+            {
+                MySQL_Connection dillisBase = (MySQL_Connection)AssetDatabase.LoadAssetAtPath("Assets/TMJ_Project_Model/Scriptable Objects/Dilis Bases.asset", typeof(MySQL_Connection));
 
-            currentConnection.Open();
+                MySqlConnection currentConnection = new MySqlConnection(dillisBase.GetConnectionString());
+                MySqlCommand getRelatedLink = new MySqlCommand("select linkAtrelado from links where ProjectOrigem = 'TAMO JUNTO - CAMPINENSE'", currentConnection);
 
-            getRelatedLink.CommandType = System.Data.CommandType.Text;
-            MySqlDataReader consultData = getRelatedLink.ExecuteReader();
+                currentConnection.Open();
 
-            if (consultData.Read()) currentLink = consultData[0].ToString();
+                getRelatedLink.CommandType = System.Data.CommandType.Text;
+                MySqlDataReader consultData = getRelatedLink.ExecuteReader();
 
-            Debug.Log("Link Atrelado " + currentLink);
-            currentConnection.Close();
+                if (consultData.Read()) finalLink = consultData[0].ToString();
+
+                currentConnection.Close();        
+            }
+            catch(Exception ex)
+            {
+                Debug.Log(ex);
+            }
         }
+        #endregion
     }
 }
