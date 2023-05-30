@@ -1,8 +1,10 @@
 using MySql.Data.MySqlClient;
 using System;
+using System.Collections;
 using System.Security.Cryptography;
 using UnityEditor;
 using UnityEngine;
+using UnityEngine.Networking;
 using UnityEngine.UI;
 using ZXing;
 using ZXing.QrCode;
@@ -40,7 +42,6 @@ namespace NekraliusDevelopmentStudio
             if (isActive)
             {
                 EncondeTextToQR_Code();
-                ReadLink();
             }
             else return;
         }
@@ -110,7 +111,7 @@ namespace NekraliusDevelopmentStudio
 
         #endregion
 
-        #region - Application Link Get -
+        #region - Application Link Get (Decrapted) -
         private void ReadLink() //This method uses an try catch block to get an link from and MySQL Database.
         {
             try

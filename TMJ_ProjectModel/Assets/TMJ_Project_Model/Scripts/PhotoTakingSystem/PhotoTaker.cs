@@ -1,14 +1,17 @@
-using MySql.Data.MySqlClient;
+
+using Newtonsoft.Json;
 using System;
 using System.Collections;
-using System.Collections.Generic;
 using System.IO;
-using System.Linq.Expressions;
+using System.Text;
+using System.Threading.Tasks;
 using TMPro;
 using UnityEditor;
 using UnityEngine;
+using UnityEngine.Networking;
 using UnityEngine.UI;
 using UnityEngine.Video;
+using Debug = UnityEngine.Debug;
 
 namespace NekraliusDevelopmentStudio
 {
@@ -25,11 +28,13 @@ namespace NekraliusDevelopmentStudio
         #endregion
 
         #region - Main Dependecies -
+        [Header("System Dependencies")]
         [SerializeField] private VideoPlayer videoPlayer;
         public FlashEffect flashEffect;
         #endregion
 
         #region - Photo Show System
+        [Header("Photo Shower")]
         public Sprite currentPhotoSprite;
         public GameObject photoShower;
         public Image photoReceiver;
@@ -39,24 +44,35 @@ namespace NekraliusDevelopmentStudio
         #endregion
 
         #region - Countdown System -
+        [Header("Countdown System")]
         public int timeToTakePhoto = 3;
         public TextMeshProUGUI countDownText;
         public SceneLoader sceneLoaderAsset;
         #endregion
 
         public GameObject photoTaker;
+        public GameObject textCircle;
 
-        #region - Photo Take System Data -
-        private string path;
+        #region - Photo Data -
         private Texture2D photoTexture;
         #endregion
 
-        private void Start()
-        {
-            path = Application.dataPath + "/Interaction Photos/";
-            if (!Directory.Exists(path)) Directory.CreateDirectory(path);
-            Screen.autorotateToPortrait = true;
-        }
+        #region - DB Post -
+        [Header("Photo Send DB")]
+        public string postURL;
+        public string postField;
+
+        public string currentPhotoLink;
+        #endregion
+
+        #region - Video Selector -
+        [Header("Video Selection")]
+        public VideoClip[] clips;
+        public VideoClip currentClip;
+        #endregion
+
+        public string base64Test;
+
         public void StartPhotoTakeAction() => StartCoroutine(TakeScreenShot());
         IEnumerator TakeScreenShot()
         {
@@ -70,7 +86,7 @@ namespace NekraliusDevelopmentStudio
                 countDownText.text = i.ToString();
                 yield return new WaitForSeconds(1);
             }
-
+            textCircle.gameObject.SetActive(false);
             countDownText.gameObject.SetActive(false);
 
             yield return new WaitForSeconds(1f);
@@ -81,20 +97,19 @@ namespace NekraliusDevelopmentStudio
 
             frameObject.SetActive(true);
 
-            //yield return new WaitForSeconds(0.1f);
-
             Texture2D screenShotTexture = new Texture2D(width, height, TextureFormat.ARGB32, false);
             Rect rect = new Rect(0, 0, width, height);
 
             yield return new WaitForEndOfFrame();
             screenShotTexture.ReadPixels(rect, 0, 0);
             screenShotTexture.Apply();
-            screenShotTexture.EncodeToPNG();
+
+            StartCoroutine(PhotoSend(screenShotTexture));
 
             photoTexture = screenShotTexture;
-
             frameObject.SetActive(false);        
             flashEffect.CallFlashEffect();
+
 
             ConvertPhoto(photoTexture);
             StartCoroutine(ShowPhoto());
@@ -112,39 +127,83 @@ namespace NekraliusDevelopmentStudio
         {
             QR_CodeGenerator.Instance.GenerateFinalHash();
             yield return new WaitForSeconds(waitTimeToShow);
-            ConvertAndSend();
+
+            //ConvertAndSend(); -> Decrapted 
+
             objectsToDesapear.SetActive(false);
             photoShower.SetActive(true);
             sceneLoaderAsset.canLoad = true;
         }
-        private void ConvertAndSend()
+        private IEnumerator PhotoSend(Texture2D photo)
         {
-            QR_CodeGenerator.Instance.isActive = true;
+            byte[] currentData = photo.EncodeToPNG();
+            string base64Photo = Convert.ToBase64String(currentData);
 
-            byte[] bytes = photoTexture.EncodeToPNG();
+            #region - Text File Creation -
+            string path = "Assets/TMJ_Project_Model/Interaction Photos/photo" + DateTime.Now.ToString("yyyy_MM_dd-hh-mm-ss");
+            string fullPhotoPath = path;
 
-            string base64string = Convert.ToBase64String(bytes);
-
-            try
+            using (StreamWriter sw = File.CreateText(path + ".txt"))
             {
-                MySQL_Connection dillisBase = (MySQL_Connection)AssetDatabase.LoadAssetAtPath("Assets/TMJ_Project_Model/Scriptable Objects/Dilis Bases.asset", typeof(MySQL_Connection));
-
-                MySqlConnection currentConnection = new MySqlConnection(dillisBase.GetConnectionString());
-
-                MySqlCommand currentComand = new MySqlCommand("insert into imgLibrary(hash, base64, projectName) values('" + QR_CodeGenerator.Instance.generatedHash + "','" + base64string + "', 'TAMO JUNTO BARRA - BOTICARIO')", currentConnection);
-
-                currentConnection.Open();
-
-                currentComand.CommandType = System.Data.CommandType.Text;
-                currentComand.ExecuteNonQuery();
-
-                currentConnection.Close();
+                sw.Write(base64Photo);
+                fullPhotoPath = path + ".txt";
             }
-            catch(Exception ex)
+            AssetDatabase.Refresh();
+            #endregion
+
+            WWWForm form = new WWWForm();
+            form.AddField("image", base64Photo);
+
+            using (UnityWebRequest www = UnityWebRequest.Post(postURL, form))
             {
-                Debug.LogError(ex.ToString());
+                www.SetRequestHeader("Content-Type", "application/json");
+                yield return www.SendWebRequest();
+
+                if (www.result != UnityWebRequest.Result.Success) Debug.Log(www.error);
+                else Debug.Log("Sucefully uploaded!");
+
+                currentPhotoLink = www.downloadHandler.text;
             }
+            QR_CodeGenerator.Instance.finalLink = currentPhotoLink;
             QR_CodeGenerator.Instance.isActive = true;
         }
+        public void SetCurrentClip(int videoIndex)
+        {
+            currentClip = clips[videoIndex];
+            videoPlayer.clip = currentClip;
+        }
+
+        #region - Decrapted Send to DB Version -
+        //private void ConvertAndSend()
+        //{
+        //    QR_CodeGenerator.Instance.isActive = true;
+
+        //    byte[] bytes = photoTexture.EncodeToPNG();
+
+        //    string base64string = Convert.ToBase64String(bytes);
+
+        //    try
+        //    {
+        //        MySQL_Connection dillisBase = (MySQL_Connection)AssetDatabase.LoadAssetAtPath("Assets/TMJ_Project_Model/Scriptable Objects/Dilis Bases.asset", typeof(MySQL_Connection));
+
+        //        MySqlConnection currentConnection = new MySqlConnection(dillisBase.GetConnectionString());
+
+        //        MySqlCommand currentComand = new MySqlCommand("insert into imgLibrary(hash, base64, projectName) values('" + QR_CodeGenerator.Instance.generatedHash + "','" + base64string + "', 'TAMO JUNTO BARRA - BOTICARIO')", currentConnection);
+
+        //        currentConnection.Open();
+
+        //        currentComand.CommandType = System.Data.CommandType.Text;
+        //        currentComand.ExecuteNonQuery();
+
+        //        currentConnection.Close();
+        //    }
+        //    catch(Exception ex)
+        //    {
+        //        Debug.LogError(ex.ToString());
+        //    }
+        //    QR_CodeGenerator.Instance.isActive = true;
+        //}
+
+        #endregion
     }
 }
