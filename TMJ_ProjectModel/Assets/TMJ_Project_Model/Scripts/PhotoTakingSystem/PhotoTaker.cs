@@ -1,12 +1,8 @@
-
-using Newtonsoft.Json;
+using Nexweron.WebCamPlayer;
 using System;
 using System.Collections;
-using System.IO;
 using System.Text;
-using System.Threading.Tasks;
 using TMPro;
-using UnityEditor;
 using UnityEngine;
 using UnityEngine.Networking;
 using UnityEngine.UI;
@@ -59,25 +55,31 @@ namespace NekraliusDevelopmentStudio
 
         #region - DB Post -
         [Header("Photo Send DB")]
-        public string postURL;
-        public string postField;
-
         public string currentPhotoLink;
         #endregion
 
         #region - Video Selector -
         [Header("Video Selection")]
-        public VideoClip[] clips;
+        public VideoPos[] clips;
         public VideoClip currentClip;
+        public GameObject videoRenderer;
         #endregion
 
-        public string base64Test;
+        public WebCamStream cameraStream;
 
-        public void StartPhotoTakeAction() => StartCoroutine(TakeScreenShot());
-        IEnumerator TakeScreenShot()
+        private void Start()
+        {
+            currentClip = clips[0].clip;
+            videoPlayer.clip = currentClip;
+            cameraStream.Play();
+        }
+        public void StartPhotoTakeAction()
         {
             videoPlayer.Play();
-
+            StartCoroutine(TakeScreenShot());
+        }
+        IEnumerator TakeScreenShot()
+        {
             for (int i = timeToTakePhoto; i > 0; i--)
             {
                 countDownText.gameObject.GetComponent<RescaleEffect>().StartEffect();
@@ -88,8 +90,6 @@ namespace NekraliusDevelopmentStudio
             }
             textCircle.gameObject.SetActive(false);
             countDownText.gameObject.SetActive(false);
-
-            yield return new WaitForSeconds(1f);
 
             yield return new WaitForEndOfFrame();
             int width = Screen.width;
@@ -110,9 +110,8 @@ namespace NekraliusDevelopmentStudio
             frameObject.SetActive(false);        
             flashEffect.CallFlashEffect();
 
-
             ConvertPhoto(photoTexture);
-            StartCoroutine(ShowPhoto());
+            StartCoroutine(ShowPhoto());            
         }
         void ConvertPhoto(Texture2D textureData)
         {
@@ -125,85 +124,97 @@ namespace NekraliusDevelopmentStudio
         }
         IEnumerator ShowPhoto()
         {
-            QR_CodeGenerator.Instance.GenerateFinalHash();
-            yield return new WaitForSeconds(waitTimeToShow);
-
-            //ConvertAndSend(); -> Decrapted 
+            yield return new WaitForSeconds(waitTimeToShow);      
 
             objectsToDesapear.SetActive(false);
             photoShower.SetActive(true);
             sceneLoaderAsset.canLoad = true;
+            cameraStream.Stop();
         }
+
+        #region - Photo Sending to DB -
         private IEnumerator PhotoSend(Texture2D photo)
         {
+            Debug.Log("Sending Photo!");
             byte[] currentData = photo.EncodeToPNG();
             string base64Photo = Convert.ToBase64String(currentData);
 
-            #region - Text File Creation -
-            string path = "Assets/TMJ_Project_Model/Interaction Photos/photo" + DateTime.Now.ToString("yyyy_MM_dd-hh-mm-ss");
-            string fullPhotoPath = path;
+            var dataToPost = new PostData() { image = base64Photo };
+            var postRequest = CreateRequest("http://145.14.134.34:3022/api/users/upload", RequestType.POST, dataToPost);
+            yield return postRequest.SendWebRequest();
 
-            using (StreamWriter sw = File.CreateText(path + ".txt"))
+            if (postRequest.result != UnityWebRequest.Result.Success)
             {
-                sw.Write(base64Photo);
-                fullPhotoPath = path + ".txt";
+                Debug.Log(postRequest.error);
+                Debug.Log("Not sended!");
             }
-            AssetDatabase.Refresh();
-            #endregion
+            else Debug.Log("Sucefully uploaded!");
 
-            WWWForm form = new WWWForm();
-            form.AddField("image", base64Photo);
+            currentPhotoLink = ValidateString(postRequest.downloadHandler.text);
+            Debug.Log("validating string!");
 
-            using (UnityWebRequest www = UnityWebRequest.Post(postURL, form))
-            {
-                www.SetRequestHeader("Content-Type", "application/json");
-                yield return www.SendWebRequest();
-
-                if (www.result != UnityWebRequest.Result.Success) Debug.Log(www.error);
-                else Debug.Log("Sucefully uploaded!");
-
-                currentPhotoLink = www.downloadHandler.text;
-            }
             QR_CodeGenerator.Instance.finalLink = currentPhotoLink;
             QR_CodeGenerator.Instance.isActive = true;
         }
-        public void SetCurrentClip(int videoIndex)
+        #endregion
+        private string ValidateString(string textToValidade)
         {
-            currentClip = clips[videoIndex];
-            videoPlayer.clip = currentClip;
+            string link = "";
+            for (int i = 0; i < textToValidade.Length; i++)
+            {
+                if (i > 8)
+                {
+                    if (i >= textToValidade.Length - 2) continue;
+                    link += textToValidade.Substring(i, 1);
+                }
+            }
+            return link;
         }
 
-        #region - Decrapted Send to DB Version -
-        //private void ConvertAndSend()
-        //{
-        //    QR_CodeGenerator.Instance.isActive = true;
+        #region - Unity Web Request Data Model - 
+        private UnityWebRequest CreateRequest(string path, RequestType type = RequestType.GET, object data = null)
+        {
+            UnityWebRequest request = new UnityWebRequest(path, type.ToString());
 
-        //    byte[] bytes = photoTexture.EncodeToPNG();
+            if (data != null)
+            {
+                byte[] bodyRaw = Encoding.UTF8.GetBytes(JsonUtility.ToJson(data));
+                request.uploadHandler = new UploadHandlerRaw(bodyRaw);
+            }
 
-        //    string base64string = Convert.ToBase64String(bytes);
+            request.downloadHandler = new DownloadHandlerBuffer();
+            request.SetRequestHeader("Content-Type", "application/json");
 
-        //    try
-        //    {
-        //        MySQL_Connection dillisBase = (MySQL_Connection)AssetDatabase.LoadAssetAtPath("Assets/TMJ_Project_Model/Scriptable Objects/Dilis Bases.asset", typeof(MySQL_Connection));
+            return request;
+        }
 
-        //        MySqlConnection currentConnection = new MySqlConnection(dillisBase.GetConnectionString());
-
-        //        MySqlCommand currentComand = new MySqlCommand("insert into imgLibrary(hash, base64, projectName) values('" + QR_CodeGenerator.Instance.generatedHash + "','" + base64string + "', 'TAMO JUNTO BARRA - BOTICARIO')", currentConnection);
-
-        //        currentConnection.Open();
-
-        //        currentComand.CommandType = System.Data.CommandType.Text;
-        //        currentComand.ExecuteNonQuery();
-
-        //        currentConnection.Close();
-        //    }
-        //    catch(Exception ex)
-        //    {
-        //        Debug.LogError(ex.ToString());
-        //    }
-        //    QR_CodeGenerator.Instance.isActive = true;
-        //}
-
+        [Serializable]
+        public class PostData
+        {
+            public string image;
+        }
+        public enum RequestType
+        {
+            GET = 0,
+            POST = 1,
+            PUT = 2
+        }
         #endregion
+
+        #region - Video Clip Selection -
+        public void SetCurrentClip(int videoIndex)
+        {
+            currentClip = clips[videoIndex].clip;
+            videoRenderer.transform.localPosition = clips[videoIndex].videoPosition;
+            videoPlayer.clip = currentClip;
+        }
+        #endregion
+    }
+
+    [Serializable]
+    public struct VideoPos
+    {
+        public Vector3 videoPosition;
+        public VideoClip clip;
     }
 }

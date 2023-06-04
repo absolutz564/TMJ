@@ -1,11 +1,5 @@
 {
   "dependencies": {
-    "com.nekraliusdevelopmentstudio.tools": {
-      "version": "file:D:/Unity Projetos/Unity Packages/Tools",
-      "depth": 0,
-      "source": "local",
-      "dependencies": {}
-    },
     "com.unity.2d.animation": {
       "version": "9.0.1",
       "depth": 1,

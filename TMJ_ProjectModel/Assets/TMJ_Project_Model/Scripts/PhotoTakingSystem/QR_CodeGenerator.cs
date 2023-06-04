@@ -1,10 +1,4 @@
-using MySql.Data.MySqlClient;
-using System;
-using System.Collections;
-using System.Security.Cryptography;
-using UnityEditor;
 using UnityEngine;
-using UnityEngine.Networking;
 using UnityEngine.UI;
 using ZXing;
 using ZXing.QrCode;
@@ -26,7 +20,6 @@ namespace NekraliusDevelopmentStudio
         [SerializeField] private RawImage QR_CodeImageReceiver;
         public Texture2D storedEncodedTexture;
 
-        private RNGCryptoServiceProvider rngCsp = new RNGCryptoServiceProvider();
         public string generatedHash;
 
         public string finalLink;
@@ -70,70 +63,6 @@ namespace NekraliusDevelopmentStudio
             storedEncodedTexture.Apply();
 
             QR_CodeImageReceiver.texture = storedEncodedTexture;
-        }
-        #endregion
-
-        #region - Identification Hash Generation -
-        public void GenerateFinalHash() //This method uses cryptography to generates an random image hash to identify the current image on an extern API.
-        {
-            var characters = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
-            var Charsarr = new char[8];
-            var random = new System.Random();
-
-            for (int i = 0; i < Charsarr.Length; i++) Charsarr[i] = characters[random.Next(characters.Length)];
-
-            string key = new String(Charsarr);
-
-            byte[] salt = new byte[16];
-            rngCsp.GetBytes(salt);
-
-            var pbkdf2 = new Rfc2898DeriveBytes(key, salt, 1000);
-
-            byte[] hash = pbkdf2.GetBytes(20);
-            byte[] hashBytes = new byte[36];
-
-            Array.Copy(salt, 0, hashBytes, 0, 16);
-            Array.Copy(hash, 0, hashBytes, 16, 20);
-
-            generatedHash = ValidString(Convert.ToBase64String(hashBytes));
-
-            //Debug.Log("Final Link -> " + finalLink + generatedHash); -> Debug option visualization
-        }
-
-        string ValidString(string stringItem) //This method removes every "+" symbol from a string for prevent API utilization errors.
-        {
-            string newString = "";
-
-            for (int i = 0; i < stringItem.Length; i++) if (!(stringItem.Substring(i, 1) == "+")) newString += stringItem.Substring(i, 1);
-
-            return newString;
-        }
-
-        #endregion
-
-        #region - Application Link Get (Decrapted) -
-        private void ReadLink() //This method uses an try catch block to get an link from and MySQL Database.
-        {
-            try
-            {
-                MySQL_Connection dillisBase = (MySQL_Connection)AssetDatabase.LoadAssetAtPath("Assets/TMJ_Project_Model/Scriptable Objects/Dilis Bases.asset", typeof(MySQL_Connection));
-
-                MySqlConnection currentConnection = new MySqlConnection(dillisBase.GetConnectionString());
-                MySqlCommand getRelatedLink = new MySqlCommand("select linkAtrelado from links where ProjectOrigem = 'TAMO JUNTO - CAMPINENSE'", currentConnection);
-
-                currentConnection.Open();
-
-                getRelatedLink.CommandType = System.Data.CommandType.Text;
-                MySqlDataReader consultData = getRelatedLink.ExecuteReader();
-
-                if (consultData.Read()) finalLink = consultData[0].ToString();
-
-                currentConnection.Close();        
-            }
-            catch(Exception ex)
-            {
-                Debug.Log(ex);
-            }
         }
         #endregion
     }
