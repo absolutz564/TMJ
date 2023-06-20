@@ -56,7 +56,7 @@ namespace NekraliusDevelopmentStudio
         }
         private void EncondeTextToQR_Code() //This method gets an string and enconde it on a 2D Texture  using the ZXing plugin.
         {
-            string linkAndHash = finalLink + generatedHash;
+            string linkAndHash = finalLink;
 
             Color32[] convertPixelToTexture = Encode(linkAndHash, storedEncodedTexture.width, storedEncodedTexture.height);
             storedEncodedTexture.SetPixels32(convertPixelToTexture);

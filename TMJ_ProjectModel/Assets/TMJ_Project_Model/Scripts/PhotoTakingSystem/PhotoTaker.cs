@@ -65,7 +65,16 @@ namespace NekraliusDevelopmentStudio
         public GameObject videoRenderer;
         #endregion
 
+        [Serializable]
+        public class ResponseData
+        {
+            public string link;
+        }
+
         public WebCamStream cameraStream;
+
+        public GameObject Border;
+        public RectTransform ObjectRect;
 
         private void Start()
         {
@@ -77,6 +86,11 @@ namespace NekraliusDevelopmentStudio
         {
             videoPlayer.Play();
             StartCoroutine(TakeScreenShot());
+        }
+
+        public void SetTime(int currTime)
+        {
+            timeToTakePhoto = currTime;
         }
         IEnumerator TakeScreenShot()
         {
@@ -95,7 +109,11 @@ namespace NekraliusDevelopmentStudio
             int width = Screen.width;
             int height = Screen.height;
 
-            frameObject.SetActive(true);
+            //frameObject.SetActive(true);
+            Border.SetActive(true);
+            //Alterar escala dos objetor capturados
+            ObjectRect.localPosition = new Vector3(10.3f, -153.8f, 0.40f);
+            ObjectRect.localScale = new Vector3(0.645f, 0.645f, 0.645f);
 
             Texture2D screenShotTexture = new Texture2D(width, height, TextureFormat.ARGB32, false);
             Rect rect = new Rect(0, 0, width, height);
@@ -107,7 +125,11 @@ namespace NekraliusDevelopmentStudio
             StartCoroutine(PhotoSend(screenShotTexture));
 
             photoTexture = screenShotTexture;
-            frameObject.SetActive(false);        
+            Border.SetActive(false);
+            ObjectRect.localPosition = new Vector3(0, 0, 0);
+            ObjectRect.localScale = new Vector3(1, 1, 1);
+
+            //frameObject.SetActive(false);        
             flashEffect.CallFlashEffect();
 
             ConvertPhoto(photoTexture);
@@ -135,23 +157,28 @@ namespace NekraliusDevelopmentStudio
         #region - Photo Sending to DB -
         private IEnumerator PhotoSend(Texture2D photo)
         {
-            Debug.Log("Sending Photo!");
             byte[] currentData = photo.EncodeToPNG();
-            string base64Photo = Convert.ToBase64String(currentData);
+            currentPhotoLink = "https://tmj-boticario-api.herokuapp.com/api/users/download/image.png";
 
-            var dataToPost = new PostData() { image = base64Photo };
-            var postRequest = CreateRequest("http://145.14.134.34:3022/api/users/upload", RequestType.POST, dataToPost);
-            yield return postRequest.SendWebRequest();
+            WWWForm form = new WWWForm();
+            form.AddBinaryData("upload", currentData, "image.png", "image/png");
 
-            if (postRequest.result != UnityWebRequest.Result.Success)
+            UnityWebRequest request = UnityWebRequest.Post("https://tmj-boticario-api.herokuapp.com/api/users/upload-file", form);
+            yield return request.SendWebRequest();
+
+            if (request.result == UnityWebRequest.Result.Success)
             {
-                Debug.Log(postRequest.error);
-                Debug.Log("Not sended!");
-            }
-            else Debug.Log("Sucefully uploaded!");
+                string jsonResponse = request.downloadHandler.text;
+                ResponseData responseData = JsonUtility.FromJson<ResponseData>(jsonResponse);
 
-            currentPhotoLink = ValidateString(postRequest.downloadHandler.text);
-            Debug.Log("validating string!");
+                Debug.Log("Imagem enviada com sucesso!");
+
+                currentPhotoLink = responseData.link;
+            }
+            else
+            {
+                Debug.Log("Erro ao enviar a imagem. Status: " + request.responseCode);
+            }
 
             QR_CodeGenerator.Instance.finalLink = currentPhotoLink;
             QR_CodeGenerator.Instance.isActive = true;
