@@ -7,6 +7,7 @@ using UnityEngine;
 using UnityEngine.Networking;
 using UnityEngine.UI;
 using UnityEngine.Video;
+using static NekraliusDevelopmentStudio.PhotoTaker;
 using Debug = UnityEngine.Debug;
 
 namespace NekraliusDevelopmentStudio
@@ -154,34 +155,74 @@ namespace NekraliusDevelopmentStudio
             cameraStream.Stop();
         }
 
+        [SerializeField] public string url = "https://tmj-boticario.dilisgs.com.br/images/index.php";
+        [SerializeField] public string endpoint = "myimage";
+        [SerializeField] public string movedFolder = "/uploaded_images/";
         #region - Photo Sending to DB -
         private IEnumerator PhotoSend(Texture2D photo)
         {
-            byte[] currentData = photo.EncodeToPNG();
-            currentPhotoLink = "https://tmj-boticario-api.herokuapp.com/api/users/download/image.png";
-
+            currentPhotoLink = "https://tmj-boticario.dilisgs.com.br/images/uploaded_images/image.png";
             WWWForm form = new WWWForm();
-            form.AddBinaryData("upload", currentData, "image.png", "image/png");
+            byte[] textureBytes = null;
+            //Texture2D imageTexture = GetTextureCopy(texture);
+            textureBytes = photo.EncodeToPNG();
 
-            UnityWebRequest request = UnityWebRequest.Post("https://tmj-boticario-api.herokuapp.com/api/users/upload-file", form);
-            yield return request.SendWebRequest();
+            form.AddBinaryData(endpoint, textureBytes, "_image_.png", "image/png");
 
-            if (request.result == UnityWebRequest.Result.Success)
+            using (WWW w = new WWW(url, form))
             {
-                string jsonResponse = request.downloadHandler.text;
-                ResponseData responseData = JsonUtility.FromJson<ResponseData>(jsonResponse);
+                yield return w;
 
-                Debug.Log("Imagem enviada com sucesso!");
+                if (!string.IsNullOrEmpty(w.error))
+                {
+                    Debug.Log("Error uploading image: " + w.error);
+                    //WaitingMessage.SetActive(false);
+                }
+                else
+                {
+                    Debug.Log("Image uploaded successfully");
+                    //WaitingMessage.SetActive(false);
 
-                currentPhotoLink = responseData.link;
+                    //qrCodeTexture = texture;
+                }
+
+                string downloadURL = url + "?download=true&image=" + "_image_.png";
+
+                QR_CodeGenerator.Instance.finalLink = downloadURL;
+                QR_CodeGenerator.Instance.isActive = true;
             }
-            else
-            {
-                Debug.Log("Erro ao enviar a imagem. Status: " + request.responseCode);
-            }
 
-            QR_CodeGenerator.Instance.finalLink = currentPhotoLink;
-            QR_CodeGenerator.Instance.isActive = true;
+
+
+            //byte[] currentData = photo.EncodeToPNG();
+            //currentPhotoLink = "https://tmj-boticario-api.herokuapp.com/api/users/download/image.png";
+
+            //WWWForm form = new WWWForm();
+            //form.AddBinaryData("upload", currentData, "image.png", "image/png");
+
+            //UnityWebRequest request = UnityWebRequest.Get(url);
+            //request.uploadHandler = new UploadHandlerRaw(currentData);
+            //request.SetRequestHeader("Content-Type", "image/png");
+
+            //yield return request.SendWebRequest();
+
+            //if (request.result == UnityWebRequest.Result.Success)
+            //{
+            //    string jsonResponse = request.downloadHandler.text;
+            //    ResponseData responseData = JsonUtility.FromJson<ResponseData>(jsonResponse);
+
+            //    Debug.Log("Imagem enviada com sucesso!");
+
+            //    currentPhotoLink = responseData.link;
+            //}
+            //else
+            //{
+            //    Debug.Log("Erro ao enviar a imagem. Status: " + request.responseCode);
+            //}
+
+            //QR_CodeGenerator.Instance.finalLink = currentPhotoLink;
+            //Debug.Log(currentPhotoLink);
+            //QR_CodeGenerator.Instance.isActive = true;
         }
         #endregion
         private string ValidateString(string textToValidade)

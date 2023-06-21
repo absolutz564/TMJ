@@ -1582,6 +1582,9 @@ MonoBehaviour:
   cameraStream: {fileID: 1046254956}
   Border: {fileID: 113480888}
   ObjectRect: {fileID: 604973921}
+  url: https://tmj-boticario.dilisgs.com.br/images/index.php
+  endpoint: myimage
+  movedFolder: /uploaded_images/
 --- !u!114 &652238750
 MonoBehaviour:
   m_ObjectHideFlags: 0
