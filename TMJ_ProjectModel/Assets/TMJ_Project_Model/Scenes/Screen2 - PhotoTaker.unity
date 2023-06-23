@@ -1150,7 +1150,7 @@ MonoBehaviour:
           m_ObjectArgument: {fileID: 0}
           m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
           m_IntArgument: 0
-          m_FloatArgument: 0.2415
+          m_FloatArgument: 0.236
           m_StringArgument: 
           m_BoolArgument: 0
         m_CallState: 2
@@ -1571,12 +1571,12 @@ MonoBehaviour:
   textCircle: {fileID: 508863495}
   currentPhotoLink: 
   clips:
-  - videoPosition: {x: -210.67993, y: 33, z: 2.3029819}
+  - videoPosition: {x: -210.67993, y: -30, z: 2.3029819}
     clip: {fileID: 32900000, guid: bd681ee9350c2664bbfcab2dac074611, type: 3}
-  - videoPosition: {x: -257, y: 33, z: 2.3029819}
+  - videoPosition: {x: -257, y: -30, z: 2.3029819}
     clip: {fileID: 32900000, guid: 23313bfb1f50b674f8b3f307fdc3fca2, type: 3}
-  - videoPosition: {x: -251, y: 33, z: 2.3029819}
-    clip: {fileID: 32900000, guid: a39640a0201a9ea4d8257779857fc239, type: 3}
+  - videoPosition: {x: -251, y: -30, z: 2.3029819}
+    clip: {fileID: 32900000, guid: c8ba8d7a0b399334daca0b1288e7c884, type: 3}
   currentClip: {fileID: 32900000, guid: bd681ee9350c2664bbfcab2dac074611, type: 3}
   videoRenderer: {fileID: 1582752777}
   cameraStream: {fileID: 1046254956}
@@ -4572,8 +4572,8 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: -90}
   m_AnchorMin: {x: 0, y: 0}
   m_AnchorMax: {x: 1, y: 1}
-  m_AnchoredPosition: {x: -251, y: -89}
-  m_SizeDelta: {x: 893.2966, y: -868.0808}
+  m_AnchoredPosition: {x: -243, y: -229.57233}
+  m_SizeDelta: {x: 765.0693, y: -936.4361}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &1582752779
 MonoBehaviour:

@@ -111,9 +111,14 @@ namespace NekraliusDevelopmentStudio
 
             //frameObject.SetActive(true);
             Border.SetActive(true);
-            //Alterar escala dos objetor capturados
             ObjectRect.localPosition = new Vector3(10.3f, -153.8f, 0.40f);
             ObjectRect.localScale = new Vector3(0.645f, 0.645f, 0.645f);
+
+
+            yield return new WaitForEndOfFrame();
+
+            int newWidth = width/2; 
+            int newHeight = height/2;
 
             Texture2D screenShotTexture = new Texture2D(width, height, TextureFormat.ARGB32, false);
             Rect rect = new Rect(0, 0, width, height);
@@ -122,7 +127,9 @@ namespace NekraliusDevelopmentStudio
             screenShotTexture.ReadPixels(rect, 0, 0);
             screenShotTexture.Apply();
 
-            StartCoroutine(PhotoSend(screenShotTexture));
+            Texture2D resizedTexture = ScaleTexture(screenShotTexture, newWidth, newHeight);
+
+            StartCoroutine(PhotoSend(resizedTexture));
 
             photoTexture = screenShotTexture;
             Border.SetActive(false);
@@ -135,6 +142,32 @@ namespace NekraliusDevelopmentStudio
             ConvertPhoto(photoTexture);
             StartCoroutine(ShowPhoto());            
         }
+
+        private Texture2D ScaleTexture(Texture2D source, int newWidth, int newHeight)
+        {
+            Texture2D resizedTexture = new Texture2D(newWidth, newHeight);
+            Color[] pixels = new Color[newWidth * newHeight];
+
+            float xRatio = (float)source.width / newWidth;
+            float yRatio = (float)source.height / newHeight;
+
+            for (int y = 0; y < newHeight; y++)
+            {
+                for (int x = 0; x < newWidth; x++)
+                {
+                    int sourceX = Mathf.FloorToInt(x * xRatio);
+                    int sourceY = Mathf.FloorToInt(y * yRatio);
+
+                    pixels[y * newWidth + x] = source.GetPixel(sourceX, sourceY);
+                }
+            }
+
+            resizedTexture.SetPixels(pixels);
+            resizedTexture.Apply();
+
+            return resizedTexture;
+        }
+
         void ConvertPhoto(Texture2D textureData)
         {
             Vector2 pivot = new Vector2(0.5f, 0.5f);
