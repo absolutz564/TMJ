@@ -17,4 +17,10 @@ EditorBuildSettings:
   - enabled: 1
     path: Assets/TMJ_Project_Model/Scenes/Screen5_FinalPhoto.unity
     guid: 6cb6cb12900116b47b8b5789649aac5f
+  - enabled: 1
+    path: Assets/Scenes/MenuScene.unity
+    guid: 2cda990e2423bbf4892e6590ba056729
+  - enabled: 1
+    path: Assets/Scenes/JogoDaMemoria.unity
+    guid: 515ed2706ab9ec04981f932c17844e02
   m_configObjects: {}
