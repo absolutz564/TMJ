@@ -26,6 +26,7 @@ namespace NekraliusDevelopmentStudio
         #region - Main Dependecies -
         [Header("System Dependencies")]
         [SerializeField] private VideoPlayer videoPlayer;
+        [SerializeField] private VideoPlayer videoPlayer2;
         public FlashEffect flashEffect;
         #endregion
 
@@ -35,7 +36,7 @@ namespace NekraliusDevelopmentStudio
         public GameObject photoShower;
         public Image photoReceiver;
         public GameObject objectsToDesapear;
-        public GameObject frameObject;
+        //public GameObject frameObject;
         public int waitTimeToShow = 4;
         #endregion
 
@@ -62,7 +63,12 @@ namespace NekraliusDevelopmentStudio
         [Header("Video Selection")]
         public VideoPos[] clips;
         public VideoClip currentClip;
+        public VideoClip currentClip2;
         public GameObject videoRenderer;
+        public GameObject videoRenderer2;
+
+        public GameObject ArrowObject;
+        public bool IsPhotoSolo = true;
         #endregion
 
         [Serializable]
@@ -80,14 +86,29 @@ namespace NekraliusDevelopmentStudio
         {
             currentClip = clips[0].clip;
             videoPlayer.clip = currentClip;
+            currentClip2 = clips[0].clip2;
+            videoPlayer2.clip = currentClip2;
             cameraStream.Play();
         }
         public void StartPhotoTakeAction()
         {
             videoPlayer.Play();
+            videoPlayer2.Play();
             StartCoroutine(TakeScreenShot());
+            if (!IsPhotoSolo)
+            {
+                StartCoroutine(WaitToShow());
+
+            }
         }
 
+        IEnumerator WaitToShow()
+        {
+            Debug.Log("Exibindo renderes");
+            yield return new WaitForSeconds(0.6f);
+            videoRenderer.SetActive(true);
+            videoRenderer2.SetActive(true);
+        }
         public void SetTime(int currTime)
         {
             timeToTakePhoto = currTime;
@@ -100,6 +121,10 @@ namespace NekraliusDevelopmentStudio
                 countDownText.gameObject.GetComponent<RescaleEffect>().ResetScale();
 
                 countDownText.text = i.ToString();
+                if(i == 1)
+                {
+                    ArrowObject.SetActive(false);
+                }
                 yield return new WaitForSeconds(1);
             }
             textCircle.gameObject.SetActive(false);
@@ -111,14 +136,16 @@ namespace NekraliusDevelopmentStudio
 
             //frameObject.SetActive(true);
             Border.SetActive(true);
-            ObjectRect.localPosition = new Vector3(10.3f, -153.8f, 0.40f);
-            ObjectRect.localScale = new Vector3(0.645f, 0.645f, 0.645f);
+            ObjectRect.localPosition = new Vector3(5.3f, 140, 0.40f);
+            ObjectRect.localScale = new Vector3(0.95f, 0.95f, 0.95f);
 
 
             yield return new WaitForEndOfFrame();
 
-            int newWidth = width/2; 
-            int newHeight = height/2;
+            int newWidth = width; 
+            int newHeight = height;
+            //int newWidth = width / 2;
+            //int newHeight = height / 2;
 
             Texture2D screenShotTexture = new Texture2D(width, height, TextureFormat.ARGB32, false);
             Rect rect = new Rect(0, 0, width, height);
@@ -150,6 +177,7 @@ namespace NekraliusDevelopmentStudio
 
             float xRatio = (float)source.width / newWidth;
             float yRatio = (float)source.height / newHeight;
+
 
             for (int y = 0; y < newHeight; y++)
             {
@@ -191,7 +219,7 @@ namespace NekraliusDevelopmentStudio
         private IEnumerator PhotoSend(Texture2D photo)
         {
             byte[] currentData = photo.EncodeToPNG();
-            currentPhotoLink = "https://tmj-boticario-api.herokuapp.com/api/users/download/image.png";
+            //currentPhotoLink = "https://tmj-boticario-api.herokuapp.com/api/users/download/image.png";
 
             WWWForm form = new WWWForm();
             form.AddBinaryData("upload", currentData, "image.png", "image/png");
@@ -264,9 +292,27 @@ namespace NekraliusDevelopmentStudio
         #region - Video Clip Selection -
         public void SetCurrentClip(int videoIndex)
         {
-            currentClip = clips[videoIndex].clip;
-            videoRenderer.transform.localPosition = clips[videoIndex].videoPosition;
-            videoPlayer.clip = currentClip;
+            IsPhotoSolo = videoIndex < 0;
+            if(videoIndex >= 0)
+            {
+                currentClip = clips[videoIndex].clip;
+                //videoRenderer.transform.localPosition = clips[videoIndex].videoPosition;
+                videoPlayer.clip = currentClip;
+
+                currentClip2 = clips[videoIndex].clip2;
+                ////videoRenderer2.transform.localPosition = clips[videoIndex].videoPosition;
+                videoPlayer2.clip = currentClip2;
+            }
+            else
+            {
+                videoRenderer.SetActive(false);
+                videoRenderer2.SetActive(false);
+                currentClip = null;
+                videoPlayer.clip = null;
+
+                currentClip2 = null;
+                videoPlayer2.clip = null;
+            }
         }
         #endregion
     }
@@ -276,5 +322,6 @@ namespace NekraliusDevelopmentStudio
     {
         public Vector3 videoPosition;
         public VideoClip clip;
+        public VideoClip clip2;
     }
 }
