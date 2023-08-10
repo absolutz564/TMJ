@@ -81,7 +81,14 @@ namespace NekraliusDevelopmentStudio
 
         public GameObject Border;
         public RectTransform ObjectRect;
+        public GameObject FirstImage;
+        public GameObject SecondImage;
 
+        public void SetVisibleImage(int index)
+        {
+            GameObject obj = index == 0 ? FirstImage : SecondImage;
+            obj.SetActive(true);
+        }
         private void Start()
         {
             currentClip = clips[0].clip;
@@ -135,7 +142,7 @@ namespace NekraliusDevelopmentStudio
             int height = Screen.height;
 
             //frameObject.SetActive(true);
-            Border.SetActive(true);
+            //Border.SetActive(true);
             ObjectRect.localPosition = new Vector3(5.3f, 140, 0.40f);
             ObjectRect.localScale = new Vector3(0.95f, 0.95f, 0.95f);
 
@@ -160,6 +167,8 @@ namespace NekraliusDevelopmentStudio
 
             photoTexture = screenShotTexture;
             Border.SetActive(false);
+            FirstImage.SetActive(false);
+            SecondImage.SetActive(false);
             ObjectRect.localPosition = new Vector3(0, 0, 0);
             ObjectRect.localScale = new Vector3(1, 1, 1);
 
