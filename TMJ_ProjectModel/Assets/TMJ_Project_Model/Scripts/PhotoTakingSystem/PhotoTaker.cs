@@ -224,37 +224,52 @@ namespace NekraliusDevelopmentStudio
             cameraStream.Stop();
         }
 
+        [SerializeField] public string url = "https://tmj-boticario.dilisgs.com.br/images/index.php";
+        [SerializeField] public string endpoint = "myimage";
+        [SerializeField] public string movedFolder = "/uploaded_images/";
+        [SerializeField] public string id = "_image_.png";
         #region - Photo Sending to DB -
         private IEnumerator PhotoSend(Texture2D photo)
         {
-            byte[] currentData = photo.EncodeToPNG();
-            //currentPhotoLink = "https://tmj-boticario-api.herokuapp.com/api/users/download/image.png";
-
+            currentPhotoLink = "https://tmj-boticario.dilisgs.com.br/images/uploaded_images/image.png";
             WWWForm form = new WWWForm();
-            form.AddBinaryData("upload", currentData, "image.png", "image/png");
+            byte[] textureBytes = null;
+            //Texture2D imageTexture = GetTextureCopy(texture);
+            textureBytes = photo.EncodeToPNG();
+            DateTime currentDateTime = DateTime.Now;
 
-            UnityWebRequest request = UnityWebRequest.Post("https://tmj-boticario-api.herokuapp.com/api/users/upload-file", form);
-            yield return request.SendWebRequest();
+            // Define o formato desejado (sem espaços)
+            string format = "yyyyMMddHHmmss";
 
-            if (request.result == UnityWebRequest.Result.Success)
+            id = currentDateTime.ToString(format) + "_image_.png";
+
+            form.AddBinaryData(endpoint, textureBytes, id, "image/png");
+
+            using (WWW w = new WWW(url, form))
             {
-                string jsonResponse = request.downloadHandler.text;
-                ResponseData responseData = JsonUtility.FromJson<ResponseData>(jsonResponse);
+                yield return w;
 
-                Debug.Log("Imagem enviada com sucesso!");
+                if (!string.IsNullOrEmpty(w.error))
+                {
+                    Debug.Log("Error uploading image: " + w.error);
+                    //WaitingMessage.SetActive(false);
+                }
+                else
+                {
+                    Debug.Log("Image uploaded successfully");
+                    //WaitingMessage.SetActive(false);
 
-                currentPhotoLink = responseData.link;
+                    //qrCodeTexture = texture;
+                }
+
+                string downloadURL = url + "?download=true&image=" + id;
+
+                QR_CodeGenerator.Instance.finalLink = downloadURL;
+                QR_CodeGenerator.Instance.isActive = true;
             }
-            else
-            {
-                Debug.Log("Erro ao enviar a imagem. Status: " + request.responseCode);
-            }
-
-            QR_CodeGenerator.Instance.finalLink = currentPhotoLink;
-            QR_CodeGenerator.Instance.isActive = true;
         }
-        #endregion
-        private string ValidateString(string textToValidade)
+            #endregion
+            private string ValidateString(string textToValidade)
         {
             string link = "";
             for (int i = 0; i < textToValidade.Length; i++)
