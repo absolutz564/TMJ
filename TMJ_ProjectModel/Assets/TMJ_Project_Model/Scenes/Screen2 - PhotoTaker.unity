@@ -7710,10 +7710,16 @@ MonoBehaviour:
   Afterphoto: {fileID: 528428986}
   RawVideoPlayer: {fileID: 1563598090}
   webcamRawImage: {fileID: 1069807283}
-  numberOfPhotos: 40
-  captureInterval: 0.075
+  numberOfPhotos: 22
+  captureInterval: 0.25
   capturedFrames: []
-  boomerangDuration: 1
+  boomerangDuration: 1.5
+  outputName: output.mp4
+  framerate: 30
+  compression: 0
+  useAudio: 0
+  audioStartTime: 0
+  audioPath: 
 --- !u!4 &2098957053
 Transform:
   m_ObjectHideFlags: 0
