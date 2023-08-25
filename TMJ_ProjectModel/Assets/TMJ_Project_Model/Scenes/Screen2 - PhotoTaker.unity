@@ -540,7 +540,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!224 &148458484
 RectTransform:
   m_ObjectHideFlags: 0
@@ -5232,7 +5232,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!224 &1278560988
 RectTransform:
   m_ObjectHideFlags: 0
@@ -7244,8 +7244,8 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0}
   m_AnchorMax: {x: 0.5, y: 0}
-  m_AnchoredPosition: {x: 2.56, y: 203}
-  m_SizeDelta: {x: 540.3329, y: 579.9944}
+  m_AnchoredPosition: {x: -0.00072861, y: 874.31}
+  m_SizeDelta: {x: 699.68, y: 1676.3}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &1992947646
 MonoBehaviour:
@@ -7710,16 +7710,12 @@ MonoBehaviour:
   Afterphoto: {fileID: 528428986}
   RawVideoPlayer: {fileID: 1563598090}
   webcamRawImage: {fileID: 1069807283}
-  numberOfPhotos: 22
-  captureInterval: 0.25
+  numberOfPhotos: 30
+  captureInterval: 0.1
   capturedFrames: []
-  boomerangDuration: 1.5
+  boomerangDuration: 2
   outputName: output.mp4
-  framerate: 30
-  compression: 0
-  useAudio: 0
-  audioStartTime: 0
-  audioPath: 
+  framerate: 40
 --- !u!4 &2098957053
 Transform:
   m_ObjectHideFlags: 0

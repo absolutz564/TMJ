@@ -21,15 +21,15 @@ public class CapturePhotos : MonoBehaviour
     private int photoCount = 0;
 
 
-    public float boomerangDuration = 1.0f; // Duração da aceleração no meio (segundos)
+    public float boomerangDuration = 1.5f; // Duração da aceleração no meio (segundos)
 
     public string outputName = "output.mp4";
-    public int framerate = 12;
-    public int compression = 20;
-    public bool useAudio = false;
-    public float audioStartTime = 0;
-    public string audioPath = "";
-    // Adicione esta função ao script existente
+    public int framerate = 40;
+
+    private Process ffmpegProcess;
+    string tempDirectory;
+    string outputPath;
+    string ffmpegPath;
 
     public async void FFMPEGConvertImagesToVideo()
     {
@@ -38,9 +38,9 @@ public class CapturePhotos : MonoBehaviour
 
     private async Task FFMPEGConvertImagesToVideoAsync()
     {
-        string tempDirectory = Path.Combine(Application.dataPath, "TempFrames");
-        string outputPath = Path.Combine(Application.streamingAssetsPath, "ExportedVideos", outputName);
-        string ffmpegPath = Path.Combine(Application.streamingAssetsPath, "FFmpeg", "ffmpeg.exe");
+        tempDirectory = Path.Combine(Application.dataPath, "TempFrames");
+        outputPath = Path.Combine(Application.streamingAssetsPath, "ExportedVideos", outputName);
+        ffmpegPath = Path.Combine(Application.streamingAssetsPath, "FFmpegOut/Windows", "ffmpeg.exe");
 
         try
         {
@@ -61,17 +61,42 @@ public class CapturePhotos : MonoBehaviour
                 }
             }
 
-            for (int i = 0; i < capturedFrames.Count; i++)
+            int TamanhoTotal = capturedFrames.Count;
+            int TamanhoIntervalo = TamanhoTotal / 3;
+
+            List<Texture2D> novaLista = new List<Texture2D>();
+
+            for (int i = 0; i < TamanhoTotal; i++)
             {
                 string imageName = "frame_" + i.ToString("0000") + ".png";
                 string imagePath = Path.Combine(tempDirectory, imageName);
                 byte[] imageBytes = capturedFrames[i].EncodeToPNG();
                 File.WriteAllBytes(imagePath, imageBytes);
-            }
-            float fRate = capturedFrames.Count / 3;
 
+                if (i < TamanhoIntervalo)
+                {
+                    novaLista.Add(capturedFrames[i]);
+                }
+                else if (i < 2 * TamanhoIntervalo)
+                {
+                    int index = (i - TamanhoIntervalo) / 2;
+                    novaLista.Add(capturedFrames[index]);
+                    novaLista.Add(capturedFrames[index]);
+                }
+                else
+                {
+                    int index = i - 2 * TamanhoIntervalo;
+                    novaLista.Add(capturedFrames[index]);
+                }
+            }
+
+
+            int bitrate = 0; // Deixe o bitrate como 0 para que o libx264 determine automaticamente a taxa de bits.
+            float fRate = 30;
             string imagePaths = $"-framerate {fRate} -i \"{tempDirectory}/frame_%04d.png\"";
-            string command = $"{imagePaths} -c:v libx264 -pix_fmt yuv420p \"{outputPath}\"";
+            string command = $"{imagePaths} -c:v libx264 -profile:v high -preset slower -crf 10 -vf \"scale=1920:1080, unsharp=5:5:1.0:5:5:0.0\" -pix_fmt yuv420p \"{outputPath}\"";
+
+            //string command = $"{imagePaths} -c:v libx264 -b:v {bitrate} -vf \"scale=1920:1080\" -pix_fmt yuv420p \"{outputPath}\"";
 
             ProcessStartInfo processStartInfo = new ProcessStartInfo(ffmpegPath, command);
             processStartInfo.WorkingDirectory = Path.GetDirectoryName(ffmpegPath);
@@ -80,46 +105,24 @@ public class CapturePhotos : MonoBehaviour
             processStartInfo.UseShellExecute = false;
             processStartInfo.CreateNoWindow = true;
 
-            using (Process process = new Process())
+            using (ffmpegProcess = new Process())
             {
-                process.StartInfo = processStartInfo;
+                ffmpegProcess.StartInfo = processStartInfo;
 
-                process.Start();
+                ffmpegProcess.Start();
+                string errorOutput = ffmpegProcess.StandardError.ReadToEnd();
+                UnityEngine.Debug.LogError("FFmpeg Error Output: " + errorOutput);
 
                 bool outputFileCreated = false;
-
-                // Use Task.Run to await the WaitForExit asynchronously
                 await Task.Run(() =>
                 {
-                    //process.WaitForExit();
-
-                    // Check every second if the output file has been created
-                    while (!outputFileCreated)
-                    {
-                        UnityEngine.Debug.Log("Verificando arquivo mp4.");
-
-                        if (File.Exists(outputPath))
-                        {
-                            outputFileCreated = true;
-                        }
-                        else
-                        {
-                            Task.Delay(1000).Wait(); // Wait for 1 second before checking again
-                        }
-                    }
+                    ffmpegProcess.WaitForExit(); // Aguarde o término do processo
+                    outputFileCreated = File.Exists(outputPath); // Verifique se o arquivo de saída foi criado
                 });
 
                 if (outputFileCreated)
                 {
-                    // Delete the temporary image files
-                    foreach (var file in Directory.GetFiles(tempDirectory))
-                    {
-                        File.Delete(file);
-                    }
-
-                    // Delete the temporary directory
-                    Directory.Delete(tempDirectory, true);
-
+                    // ... (código de limpeza)
                     UnityEngine.Debug.Log("Video conversion finished. Output path: " + outputPath);
                 }
                 else
@@ -131,6 +134,27 @@ public class CapturePhotos : MonoBehaviour
         catch (Exception e)
         {
             UnityEngine.Debug.LogError("Error during video conversion: " + e.Message);
+        }
+    }
+
+    private void OnApplicationQuit()
+    {
+        if (ffmpegProcess != null && !ffmpegProcess.HasExited)
+        {
+            ffmpegProcess.Kill();
+            ffmpegProcess.WaitForExit();
+
+            if (File.Exists(outputPath))
+            {
+                // Delete the temporary image files
+                foreach (var file in Directory.GetFiles(tempDirectory))
+                {
+                    File.Delete(file);
+                }
+
+                // Delete the temporary directory
+                Directory.Delete(tempDirectory, true);
+            }
         }
     }
 
