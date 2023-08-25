@@ -7,6 +7,7 @@ using UnityEngine;
 using UnityEngine.Networking;
 using UnityEngine.UI;
 using UnityEngine.Video;
+using static NekraliusDevelopmentStudio.PhotoTaker;
 using Debug = UnityEngine.Debug;
 
 namespace NekraliusDevelopmentStudio
@@ -26,7 +27,6 @@ namespace NekraliusDevelopmentStudio
         #region - Main Dependecies -
         [Header("System Dependencies")]
         [SerializeField] private VideoPlayer videoPlayer;
-        [SerializeField] private VideoPlayer videoPlayer2;
         public FlashEffect flashEffect;
         #endregion
 
@@ -36,7 +36,7 @@ namespace NekraliusDevelopmentStudio
         public GameObject photoShower;
         public Image photoReceiver;
         public GameObject objectsToDesapear;
-        //public GameObject frameObject;
+        public GameObject frameObject;
         public int waitTimeToShow = 4;
         #endregion
 
@@ -63,12 +63,7 @@ namespace NekraliusDevelopmentStudio
         [Header("Video Selection")]
         public VideoPos[] clips;
         public VideoClip currentClip;
-        public VideoClip currentClip2;
         public GameObject videoRenderer;
-        public GameObject videoRenderer2;
-
-        public GameObject ArrowObject;
-        public bool IsPhotoSolo = true;
         #endregion
 
         [Serializable]
@@ -86,29 +81,14 @@ namespace NekraliusDevelopmentStudio
         {
             currentClip = clips[0].clip;
             videoPlayer.clip = currentClip;
-            currentClip2 = clips[0].clip2;
-            videoPlayer2.clip = currentClip2;
             cameraStream.Play();
         }
         public void StartPhotoTakeAction()
         {
             videoPlayer.Play();
-            videoPlayer2.Play();
             StartCoroutine(TakeScreenShot());
-            if (!IsPhotoSolo)
-            {
-                StartCoroutine(WaitToShow());
-
-            }
         }
 
-        IEnumerator WaitToShow()
-        {
-            Debug.Log("Exibindo renderes");
-            yield return new WaitForSeconds(0.6f);
-            videoRenderer.SetActive(true);
-            videoRenderer2.SetActive(true);
-        }
         public void SetTime(int currTime)
         {
             timeToTakePhoto = currTime;
@@ -121,10 +101,6 @@ namespace NekraliusDevelopmentStudio
                 countDownText.gameObject.GetComponent<RescaleEffect>().ResetScale();
 
                 countDownText.text = i.ToString();
-                if(i == 1)
-                {
-                    ArrowObject.SetActive(false);
-                }
                 yield return new WaitForSeconds(1);
             }
             textCircle.gameObject.SetActive(false);
@@ -136,16 +112,9 @@ namespace NekraliusDevelopmentStudio
 
             //frameObject.SetActive(true);
             Border.SetActive(true);
-            ObjectRect.localPosition = new Vector3(5.3f, 140, 0.40f);
-            ObjectRect.localScale = new Vector3(0.95f, 0.95f, 0.95f);
-
-
-            yield return new WaitForEndOfFrame();
-
-            int newWidth = width; 
-            int newHeight = height;
-            //int newWidth = width / 2;
-            //int newHeight = height / 2;
+            //Alterar escala dos objetor capturados
+            ObjectRect.localPosition = new Vector3(10.3f, -153.8f, 0.40f);
+            ObjectRect.localScale = new Vector3(0.645f, 0.645f, 0.645f);
 
             Texture2D screenShotTexture = new Texture2D(width, height, TextureFormat.ARGB32, false);
             Rect rect = new Rect(0, 0, width, height);
@@ -154,9 +123,7 @@ namespace NekraliusDevelopmentStudio
             screenShotTexture.ReadPixels(rect, 0, 0);
             screenShotTexture.Apply();
 
-            Texture2D resizedTexture = ScaleTexture(screenShotTexture, newWidth, newHeight);
-
-            StartCoroutine(PhotoSend(resizedTexture));
+            StartCoroutine(PhotoSend(screenShotTexture));
 
             photoTexture = screenShotTexture;
             Border.SetActive(false);
@@ -169,33 +136,6 @@ namespace NekraliusDevelopmentStudio
             ConvertPhoto(photoTexture);
             StartCoroutine(ShowPhoto());            
         }
-
-        private Texture2D ScaleTexture(Texture2D source, int newWidth, int newHeight)
-        {
-            Texture2D resizedTexture = new Texture2D(newWidth, newHeight);
-            Color[] pixels = new Color[newWidth * newHeight];
-
-            float xRatio = (float)source.width / newWidth;
-            float yRatio = (float)source.height / newHeight;
-
-
-            for (int y = 0; y < newHeight; y++)
-            {
-                for (int x = 0; x < newWidth; x++)
-                {
-                    int sourceX = Mathf.FloorToInt(x * xRatio);
-                    int sourceY = Mathf.FloorToInt(y * yRatio);
-
-                    pixels[y * newWidth + x] = source.GetPixel(sourceX, sourceY);
-                }
-            }
-
-            resizedTexture.SetPixels(pixels);
-            resizedTexture.Apply();
-
-            return resizedTexture;
-        }
-
         void ConvertPhoto(Texture2D textureData)
         {
             Vector2 pivot = new Vector2(0.5f, 0.5f);
@@ -215,34 +155,74 @@ namespace NekraliusDevelopmentStudio
             cameraStream.Stop();
         }
 
+        [SerializeField] public string url = "https://tmj-boticario.dilisgs.com.br/images/index.php";
+        [SerializeField] public string endpoint = "myimage";
+        [SerializeField] public string movedFolder = "/uploaded_images/";
         #region - Photo Sending to DB -
         private IEnumerator PhotoSend(Texture2D photo)
         {
-            byte[] currentData = photo.EncodeToPNG();
+            currentPhotoLink = "https://tmj-boticario.dilisgs.com.br/images/uploaded_images/image.png";
+            WWWForm form = new WWWForm();
+            byte[] textureBytes = null;
+            //Texture2D imageTexture = GetTextureCopy(texture);
+            textureBytes = photo.EncodeToPNG();
+
+            form.AddBinaryData(endpoint, textureBytes, "_image_.png", "image/png");
+
+            using (WWW w = new WWW(url, form))
+            {
+                yield return w;
+
+                if (!string.IsNullOrEmpty(w.error))
+                {
+                    Debug.Log("Error uploading image: " + w.error);
+                    //WaitingMessage.SetActive(false);
+                }
+                else
+                {
+                    Debug.Log("Image uploaded successfully");
+                    //WaitingMessage.SetActive(false);
+
+                    //qrCodeTexture = texture;
+                }
+
+                string downloadURL = url + "?download=true&image=" + "_image_.png";
+
+                QR_CodeGenerator.Instance.finalLink = downloadURL;
+                QR_CodeGenerator.Instance.isActive = true;
+            }
+
+
+
+            //byte[] currentData = photo.EncodeToPNG();
             //currentPhotoLink = "https://tmj-boticario-api.herokuapp.com/api/users/download/image.png";
 
-            WWWForm form = new WWWForm();
-            form.AddBinaryData("upload", currentData, "image.png", "image/png");
+            //WWWForm form = new WWWForm();
+            //form.AddBinaryData("upload", currentData, "image.png", "image/png");
 
-            UnityWebRequest request = UnityWebRequest.Post("https://tmj-boticario-api.herokuapp.com/api/users/upload-file", form);
-            yield return request.SendWebRequest();
+            //UnityWebRequest request = UnityWebRequest.Get(url);
+            //request.uploadHandler = new UploadHandlerRaw(currentData);
+            //request.SetRequestHeader("Content-Type", "image/png");
 
-            if (request.result == UnityWebRequest.Result.Success)
-            {
-                string jsonResponse = request.downloadHandler.text;
-                ResponseData responseData = JsonUtility.FromJson<ResponseData>(jsonResponse);
+            //yield return request.SendWebRequest();
 
-                Debug.Log("Imagem enviada com sucesso!");
+            //if (request.result == UnityWebRequest.Result.Success)
+            //{
+            //    string jsonResponse = request.downloadHandler.text;
+            //    ResponseData responseData = JsonUtility.FromJson<ResponseData>(jsonResponse);
 
-                currentPhotoLink = responseData.link;
-            }
-            else
-            {
-                Debug.Log("Erro ao enviar a imagem. Status: " + request.responseCode);
-            }
+            //    Debug.Log("Imagem enviada com sucesso!");
 
-            QR_CodeGenerator.Instance.finalLink = currentPhotoLink;
-            QR_CodeGenerator.Instance.isActive = true;
+            //    currentPhotoLink = responseData.link;
+            //}
+            //else
+            //{
+            //    Debug.Log("Erro ao enviar a imagem. Status: " + request.responseCode);
+            //}
+
+            //QR_CodeGenerator.Instance.finalLink = currentPhotoLink;
+            //Debug.Log(currentPhotoLink);
+            //QR_CodeGenerator.Instance.isActive = true;
         }
         #endregion
         private string ValidateString(string textToValidade)
@@ -292,27 +272,9 @@ namespace NekraliusDevelopmentStudio
         #region - Video Clip Selection -
         public void SetCurrentClip(int videoIndex)
         {
-            IsPhotoSolo = videoIndex < 0;
-            if(videoIndex >= 0)
-            {
-                currentClip = clips[videoIndex].clip;
-                //videoRenderer.transform.localPosition = clips[videoIndex].videoPosition;
-                videoPlayer.clip = currentClip;
-
-                currentClip2 = clips[videoIndex].clip2;
-                ////videoRenderer2.transform.localPosition = clips[videoIndex].videoPosition;
-                videoPlayer2.clip = currentClip2;
-            }
-            else
-            {
-                videoRenderer.SetActive(false);
-                videoRenderer2.SetActive(false);
-                currentClip = null;
-                videoPlayer.clip = null;
-
-                currentClip2 = null;
-                videoPlayer2.clip = null;
-            }
+            currentClip = clips[videoIndex].clip;
+            videoRenderer.transform.localPosition = clips[videoIndex].videoPosition;
+            videoPlayer.clip = currentClip;
         }
         #endregion
     }
@@ -322,6 +284,5 @@ namespace NekraliusDevelopmentStudio
     {
         public Vector3 videoPosition;
         public VideoClip clip;
-        public VideoClip clip2;
     }
 }
