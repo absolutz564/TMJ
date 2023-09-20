@@ -1,6 +1,7 @@
 using Nexweron.WebCamPlayer;
 using System;
 using System.Collections;
+using System.IO;
 using System.Text;
 using TMPro;
 using UnityEngine;
@@ -83,6 +84,8 @@ namespace NekraliusDevelopmentStudio
         public RectTransform ObjectRect;
         public GameObject FirstImage;
         public GameObject SecondImage;
+        public GameObject FfmpegObject;
+        public CapturePhotos capturePhotos;
 
         public void SetVisibleImage(int index)
         {
@@ -101,12 +104,44 @@ namespace NekraliusDevelopmentStudio
         {
             videoPlayer.Play();
             videoPlayer2.Play();
+
+            cameraStream.Play();
             StartCoroutine(TakeScreenShot());
             if (!IsPhotoSolo)
             {
                 StartCoroutine(WaitToShow());
 
             }
+        }
+
+        public void StartVideoAction()
+        {
+            cameraStream.Play();
+            StartCoroutine(TakeVideo());
+        }
+
+        IEnumerator TakeVideo()
+        {
+            countDownText.gameObject.SetActive(true);
+
+            for (int i = timeToTakePhoto; i > 0; i--)
+            {
+                countDownText.gameObject.GetComponent<RescaleEffect>().StartEffect();
+                countDownText.gameObject.GetComponent<RescaleEffect>().ResetScale();
+
+                countDownText.text = i.ToString();
+                if (i == 1)
+                {
+                    ArrowObject.SetActive(false);
+                }
+                yield return new WaitForSeconds(1);
+            }
+            countDownText.gameObject.SetActive(false);
+            capturePhotos.StartCapture();
+            yield return new WaitForSeconds(4);
+            capturePhotos.PlayCapturedFrames(0.04f);
+            FfmpegObject.SetActive(true);
+            cameraStream.Stop();
         }
 
         IEnumerator WaitToShow()
@@ -122,6 +157,7 @@ namespace NekraliusDevelopmentStudio
         }
         IEnumerator TakeScreenShot()
         {
+            capturePhotos.RawVideoPlayer.gameObject.SetActive(false);
             for (int i = timeToTakePhoto; i > 0; i--)
             {
                 countDownText.gameObject.GetComponent<RescaleEffect>().StartEffect();
@@ -143,8 +179,8 @@ namespace NekraliusDevelopmentStudio
 
             //frameObject.SetActive(true);
             //Border.SetActive(true);
-            ObjectRect.localPosition = new Vector3(5.3f, 140, 0.40f);
-            ObjectRect.localScale = new Vector3(0.95f, 0.95f, 0.95f);
+            //ObjectRect.localPosition = new Vector3(5.3f, 140, 0.40f);
+            //ObjectRect.localScale = new Vector3(0.95f, 0.95f, 0.95f);
 
 
             yield return new WaitForEndOfFrame();
@@ -169,8 +205,8 @@ namespace NekraliusDevelopmentStudio
             Border.SetActive(false);
             FirstImage.SetActive(false);
             SecondImage.SetActive(false);
-            ObjectRect.localPosition = new Vector3(0, 0, 0);
-            ObjectRect.localScale = new Vector3(1, 1, 1);
+            //ObjectRect.localPosition = new Vector3(0, 0, 0);
+            //ObjectRect.localScale = new Vector3(1, 1, 1);
 
             //frameObject.SetActive(false);        
             flashEffect.CallFlashEffect();
@@ -268,8 +304,57 @@ namespace NekraliusDevelopmentStudio
                 QR_CodeGenerator.Instance.isActive = true;
             }
         }
-            #endregion
-            private string ValidateString(string textToValidade)
+
+        [SerializeField] public string urlVideo = "https://tmj-boticario.dilisgs.com.br/video-upload/index.php";
+        [SerializeField] public string endpointVideo = "myvideo";
+        [SerializeField] public string movedFolderVideo = "/uploaded_videos/";
+        [SerializeField] public string idVideo = "_video_.mp4";
+
+        private IEnumerator VideoSend(string videoFilePath)
+        {
+            WWWForm form = new WWWForm();
+
+            // Gerar um timestamp único para o nome do arquivo
+            string timestamp = DateTime.Now.ToString("yyyyMMddHHmmss");
+
+            // Adicionar o timestamp ao nome do arquivo
+            string uniqueVideoFileName = "video_" + timestamp + ".mp4";
+
+            // Carrega o arquivo de vídeo como bytes
+            byte[] videoBytes = File.ReadAllBytes(videoFilePath);
+
+            form.AddBinaryData(endpointVideo, videoBytes, uniqueVideoFileName, "video/mp4");
+
+            using (WWW w = new WWW(urlVideo, form))
+            {
+                yield return w;
+
+                if (!string.IsNullOrEmpty(w.error))
+                {
+                    //Debug.Log("Error uploading video: " + w.error);
+                    // Tratar o erro conforme necessário
+                    capturePhotos.VideoUploadMessage.SetActive(false);
+                }
+                else
+                {
+                    //Debug.Log("Video uploaded successfully");
+                    // Tratar o sucesso conforme necessário
+                    capturePhotos.VideoUploadMessage.SetActive(false);
+                }
+
+                string downloadURL = urlVideo + "?download=true&video=" + uniqueVideoFileName;
+
+                QR_CodeGenerator.Instance.finalLink = downloadURL;
+                QR_CodeGenerator.Instance.isActive = true;
+            }
+        }
+
+        public void UploadVideo(string videoFilePath)
+        {
+            StartCoroutine(VideoSend(videoFilePath));
+        }
+        #endregion
+        private string ValidateString(string textToValidade)
         {
             string link = "";
             for (int i = 0; i < textToValidade.Length; i++)

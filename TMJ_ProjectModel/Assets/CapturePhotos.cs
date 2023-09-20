@@ -6,12 +6,16 @@ using System.Diagnostics;
 using System.IO;
 using System;
 using System.Threading.Tasks;
+using FfmpegUnity.Sample;
+using FfmpegUnity;
+using NekraliusDevelopmentStudio;
 
 public class CapturePhotos : MonoBehaviour
 {
     public GameObject BtnPreview;
     public GameObject Afterphoto;
     public RawImage RawVideoPlayer;
+    public RawImage RawVideoPlayerPreview;
     public RawImage webcamRawImage; // Referência à RawImage que exibe o feed da webcam
     public int numberOfPhotos = 40; // Número de fotos a serem capturadas
     public float captureInterval = 3.0f / 40.0f; // Intervalo entre as capturas em segundos
@@ -21,15 +25,21 @@ public class CapturePhotos : MonoBehaviour
     private int photoCount = 0;
 
 
-    public float boomerangDuration = 1.0f; // Duração da aceleração no meio (segundos)
+    public float boomerangDuration = 1.5f; // Duração da aceleração no meio (segundos)
 
     public string outputName = "output.mp4";
-    public int framerate = 12;
-    public int compression = 20;
-    public bool useAudio = false;
-    public float audioStartTime = 0;
-    public string audioPath = "";
-    // Adicione esta função ao script existente
+    public int framerate = 40;
+
+    private Process ffmpegProcess;
+    string tempDirectory;
+    string outputPath;
+    string ffmpegPath;
+
+    public VideoCreationFromTextureList videoCreationFromTextures;
+    public FfmpegCaptureCommand ffmpegcapture;
+    public PhotoTaker videoUploader;
+    public GameObject VideoUploadMessage;
+    public FlashEffect flashEffect;
 
     public async void FFMPEGConvertImagesToVideo()
     {
@@ -38,9 +48,9 @@ public class CapturePhotos : MonoBehaviour
 
     private async Task FFMPEGConvertImagesToVideoAsync()
     {
-        string tempDirectory = Path.Combine(Application.dataPath, "TempFrames");
-        string outputPath = Path.Combine(Application.streamingAssetsPath, "ExportedVideos", outputName);
-        string ffmpegPath = Path.Combine(Application.streamingAssetsPath, "FFmpeg", "ffmpeg.exe");
+        tempDirectory = Path.Combine(Application.dataPath, "TempFrames");
+        outputPath = Path.Combine(Application.streamingAssetsPath, "ExportedVideos", outputName);
+        ffmpegPath = Path.Combine(Application.streamingAssetsPath, "FFmpegOut/Windows", "ffmpeg.exe");
 
         try
         {
@@ -61,17 +71,42 @@ public class CapturePhotos : MonoBehaviour
                 }
             }
 
-            for (int i = 0; i < capturedFrames.Count; i++)
+            int TamanhoTotal = capturedFrames.Count;
+            int TamanhoIntervalo = TamanhoTotal / 3;
+
+            List<Texture2D> novaLista = new List<Texture2D>();
+
+            for (int i = 0; i < TamanhoTotal; i++)
             {
                 string imageName = "frame_" + i.ToString("0000") + ".png";
                 string imagePath = Path.Combine(tempDirectory, imageName);
                 byte[] imageBytes = capturedFrames[i].EncodeToPNG();
                 File.WriteAllBytes(imagePath, imageBytes);
-            }
-            float fRate = capturedFrames.Count / 3;
 
+                if (i < TamanhoIntervalo)
+                {
+                    novaLista.Add(capturedFrames[i]);
+                }
+                else if (i < 2 * TamanhoIntervalo)
+                {
+                    int index = (i - TamanhoIntervalo) / 2;
+                    novaLista.Add(capturedFrames[index]);
+                    novaLista.Add(capturedFrames[index]);
+                }
+                else
+                {
+                    int index = i - 2 * TamanhoIntervalo;
+                    novaLista.Add(capturedFrames[index]);
+                }
+            }
+
+
+            int bitrate = 0; // Deixe o bitrate como 0 para que o libx264 determine automaticamente a taxa de bits.
+            float fRate = 30;
             string imagePaths = $"-framerate {fRate} -i \"{tempDirectory}/frame_%04d.png\"";
-            string command = $"{imagePaths} -c:v libx264 -pix_fmt yuv420p \"{outputPath}\"";
+            string command = $"{imagePaths} -c:v libx264 -profile:v high -preset slower -crf 10 -vf \"scale=1920:1080, unsharp=5:5:1.0:5:5:0.0\" -pix_fmt yuv420p \"{outputPath}\"";
+
+            //string command = $"{imagePaths} -c:v libx264 -b:v {bitrate} -vf \"scale=1920:1080\" -pix_fmt yuv420p \"{outputPath}\"";
 
             ProcessStartInfo processStartInfo = new ProcessStartInfo(ffmpegPath, command);
             processStartInfo.WorkingDirectory = Path.GetDirectoryName(ffmpegPath);
@@ -80,46 +115,24 @@ public class CapturePhotos : MonoBehaviour
             processStartInfo.UseShellExecute = false;
             processStartInfo.CreateNoWindow = true;
 
-            using (Process process = new Process())
+            using (ffmpegProcess = new Process())
             {
-                process.StartInfo = processStartInfo;
+                ffmpegProcess.StartInfo = processStartInfo;
 
-                process.Start();
+                ffmpegProcess.Start();
+                string errorOutput = ffmpegProcess.StandardError.ReadToEnd();
+                UnityEngine.Debug.LogError("FFmpeg Error Output: " + errorOutput);
 
                 bool outputFileCreated = false;
-
-                // Use Task.Run to await the WaitForExit asynchronously
                 await Task.Run(() =>
                 {
-                    //process.WaitForExit();
-
-                    // Check every second if the output file has been created
-                    while (!outputFileCreated)
-                    {
-                        UnityEngine.Debug.Log("Verificando arquivo mp4.");
-
-                        if (File.Exists(outputPath))
-                        {
-                            outputFileCreated = true;
-                        }
-                        else
-                        {
-                            Task.Delay(1000).Wait(); // Wait for 1 second before checking again
-                        }
-                    }
+                    ffmpegProcess.WaitForExit(); // Aguarde o término do processo
+                    outputFileCreated = File.Exists(outputPath); // Verifique se o arquivo de saída foi criado
                 });
 
                 if (outputFileCreated)
                 {
-                    // Delete the temporary image files
-                    foreach (var file in Directory.GetFiles(tempDirectory))
-                    {
-                        File.Delete(file);
-                    }
-
-                    // Delete the temporary directory
-                    Directory.Delete(tempDirectory, true);
-
+                    // ... (código de limpeza)
                     UnityEngine.Debug.Log("Video conversion finished. Output path: " + outputPath);
                 }
                 else
@@ -134,18 +147,41 @@ public class CapturePhotos : MonoBehaviour
         }
     }
 
+    private void OnApplicationQuit()
+    {
+        if (ffmpegProcess != null && !ffmpegProcess.HasExited)
+        {
+            ffmpegProcess.Kill();
+            ffmpegProcess.WaitForExit();
+
+            if (File.Exists(outputPath))
+            {
+                // Delete the temporary image files
+                foreach (var file in Directory.GetFiles(tempDirectory))
+                {
+                    File.Delete(file);
+                }
+
+                // Delete the temporary directory
+                Directory.Delete(tempDirectory, true);
+            }
+        }
+    }
+
 
     public void PlayCapturedFrames(float frameInterval)
     {
         if(!Afterphoto.activeSelf)
         {
             Afterphoto.SetActive(true);
-            StartCoroutine(PlayFramesWithBoomerangRoutine(frameInterval, 10));
+            StartCoroutine(PlayFramesWithBoomerangRoutine(frameInterval));
         }
     }
 
     private IEnumerator PlayFramesWithBoomerangRoutine(float frameInterval, int loopCount = -1)
     {
+        VideoUploadMessage.SetActive(true);
+
         if (capturedFrames.Count == 0)
         {
             UnityEngine.Debug.LogWarning("No frames to play.");
@@ -155,7 +191,7 @@ public class CapturePhotos : MonoBehaviour
         // Número de frames para aceleração no início e no final
         int numFramesWithAcceleration = 15; // Defina o número desejado de frames para aceleração
         float maxAccelerationFactor = 2f; // Fator máximo de aceleração
-
+        int previewCount = 1;
         while (loopCount != 0)
         {
             // Reprodução dos frames em ordem
@@ -163,6 +199,7 @@ public class CapturePhotos : MonoBehaviour
             {
                 // Atualizar a RawImage para mostrar o frame atual
                 RawVideoPlayer.texture = capturedFrames[i];
+                RawVideoPlayerPreview.texture = capturedFrames[i];
 
                 // Calcular a interpolação para ajustar o intervalo de frames
                 float t = (float)i / (float)(capturedFrames.Count - 1);
@@ -187,18 +224,56 @@ public class CapturePhotos : MonoBehaviour
             if (loopCount > 0)
             {
                 loopCount--;
+
             }
 
-            // Ao final da reprodução, redefinir a RawImage para nulo
-            RawVideoPlayer.texture = null;
-
-            UnityEngine.Debug.Log("Finished playing captured frames with boomerang.");
+            if (previewCount > 0)
+            {
+                previewCount--;
+                StartCoroutine(WaitStop());
+                // Ao final da reprodução, redefinir a RawImage para nulo
+                RawVideoPlayer.texture = null;
+                RawVideoPlayerPreview.texture = null;
+                RawVideoPlayerPreview.gameObject.SetActive(false);
+                UnityEngine.Debug.Log("Finished playing captured frames with boomerang.");
+            }
 
             // Aguardar um breve momento antes de começar o próximo loop
             yield return new WaitForSeconds(frameInterval);
         }
     }
 
+    IEnumerator WaitStop()
+    {
+
+        yield return new WaitForSeconds(0.85f);
+
+        ffmpegcapture.Stop();
+
+        string videoFilePath = Path.Combine(Application.streamingAssetsPath, "ExportedVideos", "capture.mp4");
+
+        // Aguarda um momento para garantir que o arquivo seja fechado
+        yield return new WaitForSeconds(1.0f);
+
+        bool uploadSuccessful = false;
+
+        while (!uploadSuccessful)
+        {
+            try
+            {
+                videoUploader.UploadVideo(videoFilePath);
+                uploadSuccessful = true;
+            }
+            catch (IOException ex)
+            {
+                UnityEngine.Debug.LogWarning("Sharing violation, waiting and retrying: " + ex.Message);
+            }
+
+            yield return new WaitForSeconds(1.0f); // Aguarda 1 segundo antes de tentar novamente
+        }
+
+        UnityEngine.Debug.Log("Video upload locally complete");
+    }
 
 
     public void StartCapture()
@@ -211,6 +286,8 @@ public class CapturePhotos : MonoBehaviour
 
     private IEnumerator CapturePhotosRoutine()
     {
+        flashEffect.StartFlashing();
+        //flashEffect.FlashEffectUpdateLoop();
         while (photoCount < numberOfPhotos)
         {
             // Aguardar o intervalo de tempo definido
@@ -230,8 +307,9 @@ public class CapturePhotos : MonoBehaviour
         capturedFrames.AddRange(duplicatedFrames);
 
         // Ativar o botão de visualização
-        BtnPreview.SetActive(true);
-        FFMPEGConvertImagesToVideo();
+        //BtnPreview.SetActive(true);
+        //FFMPEGConvertImagesToVideo();
+        //videoCreationFromTextures.InitFrames();
     }
 
     private void CapturePhotoFromWebcam()
@@ -239,17 +317,18 @@ public class CapturePhotos : MonoBehaviour
         if (webcamRawImage != null)
         {
             // Capturar o quadro atual da RawImage (assumindo que a webcam já está sendo exibida nela)
-            Texture2D texture = new Texture2D(webcamRawImage.texture.width, webcamRawImage.texture.height, TextureFormat.RGB24, false);
+            Texture2D texture = new Texture2D(webcamRawImage.texture.width, webcamRawImage.texture.height, TextureFormat.RGBA32, false);
             RenderTexture previousActiveRenderTexture = RenderTexture.active;
             RenderTexture.active = webcamRawImage.texture as RenderTexture;
             texture.ReadPixels(new Rect(0, 0, webcamRawImage.texture.width, webcamRawImage.texture.height), 0, 0);
             texture.Apply();
             RenderTexture.active = previousActiveRenderTexture;
 
-            // Adicionar a textura capturada à lista
+            //Texture2D sharpenedTexture = ImageProcessingUtils.ApplySharpenFilter(texture, 1.0f);
+
+            // Adicionar a textura capturada e processada à lista
             capturedFrames.Add(texture);
 
-            UnityEngine.Debug.Log("Captured photo " + photoCount + " and added to the list.");
         }
     }
 }
