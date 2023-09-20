@@ -72,3 +72,4 @@ crashlytics-build.properties
 /[Aa]ssets/[Ss]treamingAssets/aa/*
 
 /[Aa]ssets/StreamingAssets/FFmpeg/ffmpeg.exe
+TMJ_ProjectModel/Assets/StreamingAssets/FFmpeg/ffmpeg.exe
