@@ -1888,7 +1888,7 @@ MonoBehaviour:
   photoReceiver: {fileID: 2066456751}
   objectsToDesapear: {fileID: 686751849}
   waitTimeToShow: 7
-  timeToTakePhoto: 8
+  timeToTakePhoto: 5
   countDownText: {fileID: 2143416763}
   sceneLoaderAsset: {fileID: 7125405929254710127}
   photoTaker: {fileID: 1342151873}
@@ -7024,7 +7024,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!224 &7125405929254710126
 RectTransform:
   m_ObjectHideFlags: 0

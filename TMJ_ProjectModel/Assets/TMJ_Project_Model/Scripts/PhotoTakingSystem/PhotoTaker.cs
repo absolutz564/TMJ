@@ -224,7 +224,7 @@ namespace NekraliusDevelopmentStudio
             WWWForm form = new WWWForm();
             form.AddBinaryData("upload", currentData, "image.png", "image/png");
 
-            UnityWebRequest request = UnityWebRequest.Post("https://tmj-boticario-api.herokuapp.com/api/users/upload-file", form);
+            UnityWebRequest request = UnityWebRequest.Post("https://tmj-boticario-backend-555df95a9060.herokuapp.com/API/users/upload-file", form);
             yield return request.SendWebRequest();
 
             if (request.result == UnityWebRequest.Result.Success)
