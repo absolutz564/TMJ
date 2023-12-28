@@ -1,6 +1,7 @@
 using Nexweron.WebCamPlayer;
 using System;
 using System.Collections;
+using System.Collections.Generic;
 using System.IO;
 using System.Text;
 using TMPro;
@@ -86,7 +87,10 @@ namespace NekraliusDevelopmentStudio
         public GameObject SecondImage;
         public GameObject FfmpegObject;
         public CapturePhotos capturePhotos;
-
+        public int Index;
+        public TextMeshProUGUI Title;
+        public Image ItemImage;
+        public List<Sprite> Elements;
         public void SetVisibleImage(int index)
         {
             GameObject obj = index == 0 ? FirstImage : SecondImage;
@@ -99,6 +103,8 @@ namespace NekraliusDevelopmentStudio
             currentClip2 = clips[0].clip2;
             videoPlayer2.clip = currentClip2;
             cameraStream.Play();
+            Index = PlayerPrefs.GetInt("Element");
+            ItemImage.sprite = Elements[Index];
         }
         public void StartPhotoTakeAction()
         {
@@ -260,14 +266,14 @@ namespace NekraliusDevelopmentStudio
             cameraStream.Stop();
         }
 
-        [SerializeField] public string url = "https://tmj-boticario.dilisgs.com.br/images/index.php";
+        [SerializeField] public string url = "https://festverao-saobraz.dilisgs.com.br/images/index.php";
         [SerializeField] public string endpoint = "myimage";
         [SerializeField] public string movedFolder = "/uploaded_images/";
         [SerializeField] public string id = "_image_.png";
         #region - Photo Sending to DB -
         private IEnumerator PhotoSend(Texture2D photo)
         {
-            currentPhotoLink = "https://tmj-boticario.dilisgs.com.br/images/uploaded_images/image.png";
+            currentPhotoLink = "https://festverao-saobraz.dilisgs.com.br/images/uploaded_images/image.png";
             WWWForm form = new WWWForm();
             byte[] textureBytes = null;
             //Texture2D imageTexture = GetTextureCopy(texture);
@@ -305,7 +311,7 @@ namespace NekraliusDevelopmentStudio
             }
         }
 
-        [SerializeField] public string urlVideo = "https://tmj-boticario.dilisgs.com.br/video-upload/index.php";
+        [SerializeField] public string urlVideo = "https://festverao-saobraz.dilisgs.com.br/video-upload/index.php";
         [SerializeField] public string endpointVideo = "myvideo";
         [SerializeField] public string movedFolderVideo = "/uploaded_videos/";
         [SerializeField] public string idVideo = "_video_.mp4";
@@ -331,13 +337,13 @@ namespace NekraliusDevelopmentStudio
 
                 if (!string.IsNullOrEmpty(w.error))
                 {
-                    //Debug.Log("Error uploading video: " + w.error);
+                    Debug.Log("Error uploading video: " + w.error);
                     // Tratar o erro conforme necessário
                     capturePhotos.VideoUploadMessage.SetActive(false);
                 }
                 else
                 {
-                    //Debug.Log("Video uploaded successfully");
+                    Debug.Log("Video uploaded successfully");
                     // Tratar o sucesso conforme necessário
                     capturePhotos.VideoUploadMessage.SetActive(false);
                 }

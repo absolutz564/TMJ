@@ -1,4 +1,7 @@
+using System.Collections;
+using TMPro;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 
 public class RouletteController : MonoBehaviour
 {
@@ -13,6 +16,10 @@ public class RouletteController : MonoBehaviour
     private float tempoDecorrido = 0f;
     private float velocidadeAtual = 0f;
 
+    public Animator ArrowAnim;
+
+    public GameObject Bottom2;
+    public TextMeshProUGUI Tittle;
     void Update()
     {
         if (girando)
@@ -37,10 +44,24 @@ public class RouletteController : MonoBehaviour
                     int indiceElemento = Mathf.RoundToInt(anguloAtual / anguloPorItem) % elementos.Length;
                     string elementoSelecionado = elementos[indiceElemento];
                     Debug.Log("Elemento selecionado: " + elementoSelecionado);
-
+                    PlayerPrefs.SetInt("Element", indiceElemento);
                     girando = false;
+                    StartCoroutine(WaitToEnd());
                 }
             }
+        }
+    }
+
+    public IEnumerator WaitToEnd()
+    {
+        yield return new WaitForSeconds(2f);
+        if (PlayerPrefs.GetInt("Element") == 1 || PlayerPrefs.GetInt("Element") == 3)
+        {
+            SceneManager.LoadScene("Roulette");
+        }
+        else
+        {
+            SceneManager.LoadScene("Screen2 - PhotoTaker");
         }
     }
 
@@ -48,9 +69,20 @@ public class RouletteController : MonoBehaviour
     {
         if (!girando)
         {
-            girando = true;
-            tempoDecorrido = 0f;
-            velocidadeAtual = velocidadeInicial;
+            velocidadeInicial = Random.Range(3, 8) * 100;
+            desaceleracao = velocidadeInicial + 5;
+            Tittle.text = "''Girando...''";
+            Bottom2.SetActive(true);
+            ArrowAnim.SetTrigger("Start");
+            StartCoroutine(WaitToStart());
         }
+    }
+    IEnumerator WaitToStart()
+    {
+        yield return new WaitForSeconds(0.5f);
+
+        girando = true;
+        tempoDecorrido = 0f;
+        velocidadeAtual = velocidadeInicial;
     }
 }
