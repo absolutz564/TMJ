@@ -14,6 +14,7 @@ public class CreateCircle : MonoBehaviour
     public float minBlinkInterval = 0.5f;
     public float maxBlinkInterval = 2f;
     public float clockwiseBlinkSpeed = 0.5f; // Ajuste a velocidade aqui
+    public float clockwiseStageDuration = 5f; // Duração em segundos, ajuste conforme necessário
 
     private void OnEnable()
     {
@@ -73,16 +74,38 @@ public class CreateCircle : MonoBehaviour
             transform.GetChild(i).gameObject.SetActive(isObjectActive[i]);
         }
 
-        while (true)
+        float elapsedTime = 0f;
+
+        while (elapsedTime < clockwiseStageDuration)
         {
             for (int i = 0; i < numberOfObjects; i++)
             {
                 isObjectActive[i] = true;
                 transform.GetChild(i).gameObject.SetActive(isObjectActive[i]);
-                yield return new WaitForSeconds(clockwiseBlinkSpeed); // Ajuste a velocidade aqui
+
+                yield return new WaitForSeconds(clockwiseBlinkSpeed);
+
                 isObjectActive[i] = false;
                 transform.GetChild(i).gameObject.SetActive(isObjectActive[i]);
             }
+
+            elapsedTime += clockwiseBlinkSpeed * numberOfObjects;
+            yield return null; // Aguarda um quadro para atualizar elapsedTime
+        }
+
+        // No final do ClockwiseStage, liga e desliga todos os objetos simultaneamente
+        for (int i = 0; i < numberOfObjects; i++)
+        {
+            isObjectActive[i] = true;
+            transform.GetChild(i).gameObject.SetActive(isObjectActive[i]);
+        }
+
+        yield return new WaitForSeconds(Random.Range(minBlinkInterval, maxBlinkInterval));
+
+        for (int i = 0; i < numberOfObjects; i++)
+        {
+            isObjectActive[i] = false;
+            transform.GetChild(i).gameObject.SetActive(isObjectActive[i]);
         }
     }
 }
