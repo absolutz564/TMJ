@@ -3111,6 +3111,7 @@ MonoBehaviour:
   minBlinkInterval: 0.05
   maxBlinkInterval: 0.1
   clockwiseBlinkSpeed: 0.05
+  clockwiseStageDuration: 5
 --- !u!1 &2163612681035547713
 GameObject:
   m_ObjectHideFlags: 0
