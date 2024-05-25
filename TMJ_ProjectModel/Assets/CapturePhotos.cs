@@ -18,7 +18,7 @@ public class CapturePhotos : MonoBehaviour
     public RawImage RawVideoPlayerPreview;
     public RawImage webcamRawImage; // Referência à RawImage que exibe o feed da webcam
     public int numberOfPhotos = 40; // Número de fotos a serem capturadas
-    public float captureInterval = 3.0f / 40.0f; // Intervalo entre as capturas em segundos
+    public float captureInterval; // Intervalo entre as capturas em segundos
 
     public List<Texture2D> capturedFrames; // Lista de frames capturados
 
@@ -41,6 +41,13 @@ public class CapturePhotos : MonoBehaviour
     public GameObject VideoUploadMessage;
     public FlashEffect flashEffect;
 
+    public int VideoDuration;
+
+    private void Start()
+    {
+        //captureInterval = VideoDuration / numberOfPhotos;
+    }
+
     public async void FFMPEGConvertImagesToVideo()
     {
         await FFMPEGConvertImagesToVideoAsync();
@@ -48,9 +55,11 @@ public class CapturePhotos : MonoBehaviour
 
     private async Task FFMPEGConvertImagesToVideoAsync()
     {
-        tempDirectory = Path.Combine(Application.dataPath, "TempFrames");
-        outputPath = Path.Combine(Application.streamingAssetsPath, "ExportedVideos", outputName);
-        ffmpegPath = Path.Combine(Application.streamingAssetsPath, "FFmpegOut/Windows", "ffmpeg.exe");
+
+        string tempDirectory = Path.Combine(Application.dataPath, "TempFrames");
+        string audioFilePath = Path.Combine(Application.dataPath, "Music");
+        string outputPath = Path.Combine(Application.streamingAssetsPath, "ExportedVideos", outputName);
+        string ffmpegPath = Path.Combine(Application.streamingAssetsPath, "FFmpegOut/Windows", "ffmpeg.exe");
 
         try
         {
@@ -71,56 +80,41 @@ public class CapturePhotos : MonoBehaviour
                 }
             }
 
-            int TamanhoTotal = capturedFrames.Count;
-            int TamanhoIntervalo = TamanhoTotal / 3;
-
-            List<Texture2D> novaLista = new List<Texture2D>();
-
-            for (int i = 0; i < TamanhoTotal; i++)
+            // Salvar os frames capturados como arquivos PNG na pasta temporária
+            for (int i = 0; i < capturedFrames.Count; i++)
             {
                 string imageName = "frame_" + i.ToString("0000") + ".png";
                 string imagePath = Path.Combine(tempDirectory, imageName);
                 byte[] imageBytes = capturedFrames[i].EncodeToPNG();
                 File.WriteAllBytes(imagePath, imageBytes);
-
-                if (i < TamanhoIntervalo)
-                {
-                    novaLista.Add(capturedFrames[i]);
-                }
-                else if (i < 2 * TamanhoIntervalo)
-                {
-                    int index = (i - TamanhoIntervalo) / 2;
-                    novaLista.Add(capturedFrames[index]);
-                    novaLista.Add(capturedFrames[index]);
-                }
-                else
-                {
-                    int index = i - 2 * TamanhoIntervalo;
-                    novaLista.Add(capturedFrames[index]);
-                }
             }
+            UnityEngine.Debug.Log("CHAMOU AQUI");
+
+            // Calcular a taxa de quadros para um vídeo de VideoDuration
+            int totalFrames = capturedFrames.Count;
+            float frameRate = totalFrames / VideoDuration;
+
+            // Configurar o comando FFmpeg para converter as imagens em um vídeo de 10 segundos
+            string imagePaths = $"-framerate {frameRate} -i \"{tempDirectory}/frame_%04d.png\"";
+            string audioOptions = $"-i \"{audioFilePath}\" -c:a aac -b:a 192k -ac 2 -ar 44100 -shortest";
+            string command = $"{imagePaths} {audioOptions} -c:v libx264 -profile:v high -preset slower -crf {VideoDuration} -vf \"scale=1920:1080\" -pix_fmt yuv420p \"{outputPath}\"";
 
 
-            int bitrate = 0; // Deixe o bitrate como 0 para que o libx264 determine automaticamente a taxa de bits.
-            float fRate = 30;
-            string imagePaths = $"-framerate {fRate} -i \"{tempDirectory}/frame_%04d.png\"";
-            string command = $"{imagePaths} -c:v libx264 -profile:v high -preset slower -crf 10 -vf \"scale=1920:1080, unsharp=5:5:1.0:5:5:0.0\" -pix_fmt yuv420p \"{outputPath}\"";
+            ProcessStartInfo processStartInfo = new ProcessStartInfo(ffmpegPath, command)
+            {
+                WorkingDirectory = Path.GetDirectoryName(ffmpegPath),
+                RedirectStandardOutput = true,
+                RedirectStandardError = true,
+                UseShellExecute = false,
+                CreateNoWindow = true
+            };
 
-            //string command = $"{imagePaths} -c:v libx264 -b:v {bitrate} -vf \"scale=1920:1080\" -pix_fmt yuv420p \"{outputPath}\"";
-
-            ProcessStartInfo processStartInfo = new ProcessStartInfo(ffmpegPath, command);
-            processStartInfo.WorkingDirectory = Path.GetDirectoryName(ffmpegPath);
-            processStartInfo.RedirectStandardOutput = true;
-            processStartInfo.RedirectStandardError = true;
-            processStartInfo.UseShellExecute = false;
-            processStartInfo.CreateNoWindow = true;
-
-            using (ffmpegProcess = new Process())
+            using (Process ffmpegProcess = new Process())
             {
                 ffmpegProcess.StartInfo = processStartInfo;
 
                 ffmpegProcess.Start();
-                string errorOutput = ffmpegProcess.StandardError.ReadToEnd();
+                string errorOutput = await ffmpegProcess.StandardError.ReadToEndAsync();
                 UnityEngine.Debug.LogError("FFmpeg Error Output: " + errorOutput);
 
                 bool outputFileCreated = false;
@@ -132,7 +126,6 @@ public class CapturePhotos : MonoBehaviour
 
                 if (outputFileCreated)
                 {
-                    // ... (código de limpeza)
                     UnityEngine.Debug.Log("Video conversion finished. Output path: " + outputPath);
                 }
                 else
@@ -146,6 +139,8 @@ public class CapturePhotos : MonoBehaviour
             UnityEngine.Debug.LogError("Error during video conversion: " + e.Message);
         }
     }
+
+
 
     private void OnApplicationQuit()
     {
@@ -188,9 +183,9 @@ public class CapturePhotos : MonoBehaviour
             yield break;
         }
 
-        // Número de frames para aceleração no início e no final
-        int numFramesWithAcceleration = 15; // Defina o número desejado de frames para aceleração
-        float maxAccelerationFactor = 2f; // Fator máximo de aceleração
+        // Calcular o intervalo de quadro baseado na taxa de quadros desejada (fps)
+        float frameTime = frameInterval; // Se frameInterval já está em segundos, não precisa mudar
+
         int previewCount = 1;
         while (loopCount != 0)
         {
@@ -201,30 +196,13 @@ public class CapturePhotos : MonoBehaviour
                 RawVideoPlayer.texture = capturedFrames[i];
                 RawVideoPlayerPreview.texture = capturedFrames[i];
 
-                // Calcular a interpolação para ajustar o intervalo de frames
-                float t = (float)i / (float)(capturedFrames.Count - 1);
-
-                // Aplicar aceleração nos primeiros e últimos frames de forma mais suave
-                float accelerationFactor = 1.0f;
-                if (i < numFramesWithAcceleration)
-                {
-                    accelerationFactor = Mathf.Lerp(1.0f, maxAccelerationFactor, t); // Aceleração no início
-                }
-                else if (i >= capturedFrames.Count - numFramesWithAcceleration)
-                {
-                    float tEnd = 1.0f - (float)(capturedFrames.Count - i - 1) / (float)numFramesWithAcceleration;
-                    accelerationFactor = Mathf.Lerp(1.0f, maxAccelerationFactor, tEnd); // Aceleração no final
-                }
-
-                float interpolatedFrameInterval = frameInterval * accelerationFactor;
-
-                yield return new WaitForSeconds(interpolatedFrameInterval);
+                // Esperar pelo intervalo de frame especificado
+                yield return new WaitForSeconds(frameTime);
             }
 
             if (loopCount > 0)
             {
                 loopCount--;
-
             }
 
             if (previewCount > 0)
@@ -235,13 +213,14 @@ public class CapturePhotos : MonoBehaviour
                 RawVideoPlayer.texture = null;
                 RawVideoPlayerPreview.texture = null;
                 RawVideoPlayerPreview.gameObject.SetActive(false);
-                UnityEngine.Debug.Log("Finished playing captured frames with boomerang.");
+                UnityEngine.Debug.Log("Finished playing captured frames.");
             }
 
-            // Aguardar um breve momento antes de começar o próximo loop
-            yield return new WaitForSeconds(frameInterval);
+            // Remover a espera após o loop completo para evitar pausas indesejadas
+            // yield return new WaitForSeconds(frameInterval);
         }
     }
+
 
     IEnumerator WaitStop()
     {
@@ -301,10 +280,6 @@ public class CapturePhotos : MonoBehaviour
 
         UnityEngine.Debug.Log("Captured all photos.");
 
-        // Duplicar a lista e adicionar os elementos de forma reversa na lista original
-        List<Texture2D> duplicatedFrames = new List<Texture2D>(capturedFrames);
-        duplicatedFrames.Reverse();
-        capturedFrames.AddRange(duplicatedFrames);
 
         // Ativar o botão de visualização
         //BtnPreview.SetActive(true);

@@ -12,6 +12,13 @@ using Debug = UnityEngine.Debug;
 
 namespace NekraliusDevelopmentStudio
 {
+    [System.Serializable]
+    public class QRCodeData
+    {
+        public string qrcode;
+        public string image;
+    }
+
     public class PhotoTaker : MonoBehaviour
     {
         //Code made by Victor Paulo Melo da Silva - Game Developer - GitHub - https://github.com/Necralius
@@ -138,8 +145,12 @@ namespace NekraliusDevelopmentStudio
             }
             countDownText.gameObject.SetActive(false);
             capturePhotos.StartCapture();
-            yield return new WaitForSeconds(4);
-            capturePhotos.PlayCapturedFrames(0.04f);
+            yield return new WaitForSeconds(capturePhotos.VideoDuration + 2);
+            float frameRate = capturePhotos.framerate;
+            float frameInterval = 1.0f / frameRate;
+
+            // Iniciar a reprodução com a taxa de quadros desejada
+            capturePhotos.PlayCapturedFrames(frameInterval);
             FfmpegObject.SetActive(true);
             cameraStream.Stop();
         }
@@ -305,48 +316,131 @@ namespace NekraliusDevelopmentStudio
             }
         }
 
-        [SerializeField] public string urlVideo = "https://tmj-boticario.dilisgs.com.br/video-upload/index.php";
-        [SerializeField] public string endpointVideo = "myvideo";
-        [SerializeField] public string movedFolderVideo = "/uploaded_videos/";
-        [SerializeField] public string idVideo = "_video_.mp4";
+        //[SerializeField] public string urlVideo = "https://tmj-boticario.dilisgs.com.br/video-upload/index.php";
+        //[SerializeField] public string endpointVideo = "myvideo";
+        //[SerializeField] public string movedFolderVideo = "/uploaded_videos/";
+        //[SerializeField] public string idVideo = "_video_.mp4";
 
-        private IEnumerator VideoSend(string videoFilePath)
+        //private IEnumerator VideoSend(string videoFilePath)
+        //{
+        //    WWWForm form = new WWWForm();
+
+        //    // Gerar um timestamp único para o nome do arquivo
+        //    string timestamp = DateTime.Now.ToString("yyyyMMddHHmmss");
+
+        //    // Adicionar o timestamp ao nome do arquivo
+        //    string uniqueVideoFileName = "video_" + timestamp + ".mp4";
+
+        //    // Carrega o arquivo de vídeo como bytes
+        //    byte[] videoBytes = File.ReadAllBytes(videoFilePath);
+
+        //    form.AddBinaryData(endpointVideo, videoBytes, uniqueVideoFileName, "video/mp4");
+
+        //    using (WWW w = new WWW(urlVideo, form))
+        //    {
+        //        yield return w;
+
+        //        if (!string.IsNullOrEmpty(w.error))
+        //        {
+        //            //Debug.Log("Error uploading video: " + w.error);
+        //            // Tratar o erro conforme necessário
+        //            capturePhotos.VideoUploadMessage.SetActive(false);
+        //        }
+        //        else
+        //        {
+        //            //Debug.Log("Video uploaded successfully");
+        //            // Tratar o sucesso conforme necessário
+        //            capturePhotos.VideoUploadMessage.SetActive(false);
+        //        }
+
+        //        string downloadURL = urlVideo + "?download=true&video=" + uniqueVideoFileName;
+
+        //        QR_CodeGenerator.Instance.finalLink = downloadURL;
+        //        QR_CodeGenerator.Instance.isActive = true;
+        //    }
+        //}
+
+        [SerializeField] private string urlVideo = "http://145.14.134.34:3003";
+        [SerializeField] private string endpointVideo = "/agent/participants/upload";
+        [SerializeField] private string token = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlbWFpbCI6InVuaXR5QG1hdHV0YS5jb20uYnIiLCJleHBlcmllbmNlX2lkIjoiMDNmOTJiY2EtYTVlZS00NGM3LWI5ZTEtYWFlZjBiNGJlNGNkIiwiaWF0IjoxNzE2NTE2MjQyLCJleHAiOjE3MjQyOTIyNDIsInN1YiI6ImFkYjBkZTM0LTdjOWUtNGY3Yi1iNDlmLTMzNWJkZTIzNDA4NCJ9.B__4UNl7MZmbEYmkIU0HGiQCQjbk_vyxSv6NmXVKg_E";
+        [SerializeField] private string accessToken = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJuYW1lIjoiREFOQ0FfTUFUVVRBIiwiaWF0IjoxNzE2NDk1MTgxLCJleHAiOjE3MjQyNzExODEsInN1YiI6IkRBTkNBX01BVFVUQSJ9.nmTQnXKxWVuEC8rBzHSAbEvulemfy5UFlCZN8zGDzE0";
+
+        public IEnumerator VideoSend(string videoFilePath)
         {
-            WWWForm form = new WWWForm();
+            Debug.Log("Starting video upload...");
 
-            // Gerar um timestamp único para o nome do arquivo
             string timestamp = DateTime.Now.ToString("yyyyMMddHHmmss");
-
-            // Adicionar o timestamp ao nome do arquivo
             string uniqueVideoFileName = "video_" + timestamp + ".mp4";
-
-            // Carrega o arquivo de vídeo como bytes
             byte[] videoBytes = File.ReadAllBytes(videoFilePath);
 
-            form.AddBinaryData(endpointVideo, videoBytes, uniqueVideoFileName, "video/mp4");
+            Debug.Log($"Loaded video file {videoFilePath}, size: {videoBytes.Length} bytes");
 
-            using (WWW w = new WWW(urlVideo, form))
+            WWWForm form = new WWWForm();
+            form.AddField("isFileIdentify", "false");
+            form.AddBinaryData("file", videoBytes, uniqueVideoFileName, "video/mp4");
+
+            string fullUrl = urlVideo + endpointVideo;
+
+            using (UnityWebRequest request = UnityWebRequest.Post(fullUrl, form))
             {
-                yield return w;
+                request.SetRequestHeader("Authorization", "Bearer " + token);
+                request.SetRequestHeader("access_token", accessToken);
 
-                if (!string.IsNullOrEmpty(w.error))
+
+                yield return request.SendWebRequest();
+
+                if (request.result != UnityWebRequest.Result.Success)
                 {
-                    //Debug.Log("Error uploading video: " + w.error);
-                    // Tratar o erro conforme necessário
-                    capturePhotos.VideoUploadMessage.SetActive(false);
+                    Debug.LogError($"Error uploading video: {request.error}");
+                    Debug.LogError($"Response Code: {request.responseCode}");
+                    Debug.LogError($"Response: {request.downloadHandler.text}");
+
                 }
                 else
                 {
-                    //Debug.Log("Video uploaded successfully");
-                    // Tratar o sucesso conforme necessário
-                    capturePhotos.VideoUploadMessage.SetActive(false);
+                    Debug.Log("Video uploaded successfully");
+                    Debug.Log(request);
+                    Debug.Log(request.downloadHandler.text);
+                    string jsonString = request.downloadHandler.text;
+                    QRCodeData data = JsonUtility.FromJson<QRCodeData>(jsonString); // Analisa a string JSON em um objeto QRCodeData
+
+                    string base64Code = data.qrcode; // Obtém o valor da propriedade "qrcode"
+
+                    // Remove o prefixo "data:image/png;base64," do código base64
+                    string base64Only = base64Code.Substring(base64Code.IndexOf(",") + 1);
+
+                    Debug.Log("Base64 Code: " + base64Only); // Exibe o código base64 no console
+
+                    base64QRCode = base64Only;
+
+                    StartCoroutine(LoadQRCode());
+
                 }
 
-                string downloadURL = urlVideo + "?download=true&video=" + uniqueVideoFileName;
+                //string downloadURL = urlVideo + "?download=true&video=" + uniqueVideoFileName;
 
-                QR_CodeGenerator.Instance.finalLink = downloadURL;
-                QR_CodeGenerator.Instance.isActive = true;
+                //// Definir o link final para o QR_CodeGenerator
+                //QR_CodeGenerator.Instance.finalLink = downloadURL;
+                //QR_CodeGenerator.Instance.isActive = true;
             }
+        }
+
+        public RawImage rawImage;
+        public string base64QRCode;
+        public GameObject sendMessage;
+
+        private IEnumerator LoadQRCode()
+        {
+            // Decodifica a string base64 em uma textura
+            byte[] bytes = Convert.FromBase64String(base64QRCode);
+            Texture2D texture = new Texture2D(1, 1);
+            texture.LoadImage(bytes);
+
+            // Define a textura na RawImage
+            rawImage.texture = texture;
+            sendMessage.SetActive(false);
+
+            yield return null;
         }
 
         public void UploadVideo(string videoFilePath)

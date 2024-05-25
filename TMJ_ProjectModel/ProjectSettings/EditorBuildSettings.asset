@@ -5,16 +5,16 @@ EditorBuildSettings:
   m_ObjectHideFlags: 0
   serializedVersion: 2
   m_Scenes:
-  - enabled: 1
+  - enabled: 0
     path: Assets/TMJ_Project_Model/Scenes/Screen.unity
     guid: 5c0949ea3e2b1c34ab49ebd361be9007
-  - enabled: 1
+  - enabled: 0
     path: Assets/TMJ_Project_Model/Scenes/Screen1.unity
     guid: 210c38ab9d27e04419a318aeaf0ae6bd
-  - enabled: 1
+  - enabled: 0
     path: Assets/TMJ_Project_Model/Scenes/Screen2 - PhotoTaker.unity
     guid: b623fbf562bef4c4bbf68dee80befebb
-  - enabled: 1
+  - enabled: 0
     path: Assets/TMJ_Project_Model/Scenes/Screen5_FinalPhoto.unity
     guid: 6cb6cb12900116b47b8b5789649aac5f
   - enabled: 0
@@ -23,4 +23,7 @@ EditorBuildSettings:
   - enabled: 0
     path: Assets/Scenes/JogoDaMemoria.unity
     guid: 515ed2706ab9ec04981f932c17844e02
+  - enabled: 0
+    path: Assets/NextGenRecorder/Examples/SimpleRecorder/SimpleRecorder-TestScene.unity
+    guid: 075c1ee971a4c4af3958d269742d5462
   m_configObjects: {}

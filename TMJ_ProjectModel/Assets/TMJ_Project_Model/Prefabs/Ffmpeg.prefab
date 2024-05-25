@@ -1,0 +1,97 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!1 &5364890616895333079
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 6445835662318539080}
+  - component: {fileID: 8138260908250293310}
+  m_Layer: 0
+  m_Name: Ffmpeg
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 0
+--- !u!4 &6445835662318539080
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5364890616895333079}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 209.33194, y: 1333.0399, z: 5.919924}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &8138260908250293310
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5364890616895333079}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 7ee1d0a4d62872b4d9fa8e81e40c8c46, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  ExecuteOnStart: 1
+  Options: ' -y -re  -f rawvideo -s 842x413 -pix_fmt rgba -i "\\.\pipe\FfmpegUnity_1960efba-040e-4b8a-9539-68b898785c69" 
+    -f f32le -ar 48000 -ac 2 -i "\\.\pipe\FfmpegUnity_4e2be58a-43cc-4c3c-83da-933d4d87cbfd" 
+    -c:v "libopenh264"
+
+    -c:a "aac"
+
+    -map 0:v:0
+
+    -map 1:a:0
+
+    -vsync
+    1
+
+    -f mpegts
+
+    srt://192.168.11.29:3000'
+  PrintStdErr: 0
+  CaptureSources:
+  - Type: 1
+    Width: 1080
+    Height: 1920
+    FrameRate: 30
+    SourceCamera: {fileID: 0}
+    SourceRenderTexture: {fileID: 8400000, guid: d18de05554d91b7428781281306b7f82, type: 2}
+    SourceAudio: {fileID: 0}
+    Mute: 0
+  - Type: 3
+    Width: -1
+    Height: 480
+    FrameRate: 30
+    SourceCamera: {fileID: 0}
+    SourceRenderTexture: {fileID: 0}
+    SourceAudio: {fileID: 0}
+    Mute: 0
+  CaptureOptions: '-c:v "libopenh264" -profile:v high
+
+    -preset slower
+
+    -crf
+    6
+
+    -b:v 34M
+
+    -c:a "aac"
+
+    -map 0:v:0
+
+    -map 1:a:0
+
+    "{EXPORTED_VIDEO_PATH}/capture.mp4"'
