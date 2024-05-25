@@ -1,4 +1,6 @@
 using System.Collections;
+using System.Collections.Generic;
+using System.Linq;
 using TMPro;
 using UnityEngine;
 using UnityEngine.SceneManagement;
@@ -20,6 +22,33 @@ public class RouletteController : MonoBehaviour
 
     public GameObject Bottom2;
     public TextMeshProUGUI Tittle;
+    public bool CanGetProduct = true;
+    public bool CanGetSpecialGift = true;
+
+    void Start()
+    {
+        VerificarLimite("ProductsDelivered", "ProductsLimit", "ProdutoSaoBraz");
+        VerificarLimite("SpecialGiftDelivered", "SpecialGiftsLimit", "BrindeEspecial");
+    }
+
+    void VerificarLimite(string playerPrefKey, string playerPrefLimitKey, string elementoARemover)
+    {
+        int delivered = PlayerPrefs.GetInt(playerPrefKey, 0);
+        int limit = PlayerPrefs.GetInt(playerPrefLimitKey, 0);
+        if (delivered >= limit)
+        {
+            if (elementoARemover == "ProdutoSaoBraz")
+            {
+                CanGetProduct = false;
+            }
+            if (elementoARemover == "BrindeEspecial")
+            {
+                CanGetSpecialGift = false;
+            }
+            Debug.Log("Elemento " + elementoARemover + " removido");
+        }
+    }
+
     void Update()
     {
         if (girando)
@@ -28,6 +57,12 @@ public class RouletteController : MonoBehaviour
 
             float anguloAtual = roleta.eulerAngles.z % 360;
             float anguloDestino = Mathf.Round(anguloAtual / anguloPorItem) * anguloPorItem;
+
+            // Ajuste para evitar os elementos removidos
+            while (!elementos.Contains(elementos[Mathf.RoundToInt(anguloDestino / anguloPorItem) % elementos.Length]))
+            {
+                anguloDestino += anguloPorItem;
+            }
 
             if (tempoDecorrido < tempoDeGiro)
             {
@@ -45,11 +80,104 @@ public class RouletteController : MonoBehaviour
                     string elementoSelecionado = elementos[indiceElemento];
                     Debug.Log("Elemento selecionado: " + elementoSelecionado);
                     PlayerPrefs.SetInt("Element", indiceElemento);
+                    IncrementarPlayerPrefs(elementoSelecionado);
                     girando = false;
                     StartCoroutine(WaitToEnd());
                 }
             }
         }
+    }
+
+    public void ButtonClick()
+    {
+        if (!girando)
+        {
+            //Elemento 3 = Tente novamente
+            //Elemento 4 = Produto São Braz
+            //Elemento 5 = Não foi dessa vez
+            //Elemento 6 = Brinde Especial
+            //Elemento 7 = Tente novamente
+            //random.range(3,8)
+            List<int> randomRotateValues = new List<int> { 3, 5, 7 };
+
+            if (CanGetSpecialGift)
+            {
+                randomRotateValues.Add(6);
+                Debug.Log("Pode achar Brinde");
+            } 
+            if (CanGetProduct) {
+                randomRotateValues.Add(4);
+                Debug.Log("Pode achar São Braz");
+            }
+
+            int valorAleatorio = GetRandomValue(randomRotateValues);
+            Debug.Log("Valor aleatório: " + valorAleatorio);
+            if (valorAleatorio == 3)
+            {
+                Debug.Log("Tente Novamente");
+            }
+            if (valorAleatorio == 4)
+            {
+                Debug.Log("Produto São Brazz");
+            }
+            if (valorAleatorio == 5)
+            {
+                Debug.Log("Não Foi dEssa vez");
+            }
+            if (valorAleatorio == 6)
+            {
+                Debug.Log("Brinde Especial");
+            }
+            if (valorAleatorio == 7)
+            {
+                Debug.Log("Tente Novamente");
+            }
+
+            velocidadeInicial = valorAleatorio * 100;
+            desaceleracao = velocidadeInicial + 5;
+            Tittle.text = "''Girando...''";
+            Bottom2.SetActive(true);
+            ArrowAnim.SetTrigger("Start");
+            StartCoroutine(WaitToStart());
+        }
+    }
+    private int GetRandomValue(List<int> randomRotateValues)
+    {
+        int index = Random.Range(0, randomRotateValues.Count);
+        return randomRotateValues[index];
+    }
+
+    IEnumerator WaitToStart()
+    {
+        yield return new WaitForSeconds(0.5f);
+
+        girando = true;
+        tempoDecorrido = 0f;
+        velocidadeAtual = velocidadeInicial;
+    }
+    private void IncrementarPlayerPrefs(string elemento)
+    {
+        switch (elemento)
+        {
+            case "ProdutoSaoBraz":
+                IncrementPlayerPrefs("ProductsDelivered");
+                Debug.Log("ProdutoSaoBraz rewarded, ProductsDelivered incremented");
+                break;
+            case "BrindeEspecial":
+                IncrementPlayerPrefs("SpecialGiftDelivered");
+                Debug.Log("BrindeEspecial rewarded, SpecialGiftDelivered incremented");
+                break;
+            default:
+                Debug.Log("No special reward");
+                break;
+        }
+    }
+
+    private void IncrementPlayerPrefs(string key)
+    {
+        int currentValue = PlayerPrefs.GetInt(key, 0);
+        PlayerPrefs.SetInt(key, currentValue + 1);
+        PlayerPrefs.Save();
     }
 
     public IEnumerator WaitToEnd()
@@ -63,26 +191,5 @@ public class RouletteController : MonoBehaviour
         {
             SceneManager.LoadScene("Screen2 - PhotoTaker");
         }
-    }
-
-    public void ButtonClick()
-    {
-        if (!girando)
-        {
-            velocidadeInicial = Random.Range(3, 8) * 100;
-            desaceleracao = velocidadeInicial + 5;
-            Tittle.text = "''Girando...''";
-            Bottom2.SetActive(true);
-            ArrowAnim.SetTrigger("Start");
-            StartCoroutine(WaitToStart());
-        }
-    }
-    IEnumerator WaitToStart()
-    {
-        yield return new WaitForSeconds(0.5f);
-
-        girando = true;
-        tempoDecorrido = 0f;
-        velocidadeAtual = velocidadeInicial;
     }
 }

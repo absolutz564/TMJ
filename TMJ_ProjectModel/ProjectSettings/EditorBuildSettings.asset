@@ -6,6 +6,9 @@ EditorBuildSettings:
   serializedVersion: 2
   m_Scenes:
   - enabled: 1
+    path: Assets/TMJ_Project_Model/Scenes/SetupScene.unity
+    guid: 2645542e454b12d4297c278ca07c771a
+  - enabled: 1
     path: Assets/TMJ_Project_Model/Scenes/Screen.unity
     guid: 5c0949ea3e2b1c34ab49ebd361be9007
   - enabled: 1
