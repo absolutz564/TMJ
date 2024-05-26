@@ -6,6 +6,10 @@ public class SpecialGiftsTMPDropdownHandler : MonoBehaviour
 {
     public TMP_Dropdown tmpDropdown; // Referência ao TMP_Dropdown
 
+    private void Awake()
+    {
+        Screen.SetResolution(1080, 1920, true);
+    }
     void Start()
     {
         PlayerPrefs.SetInt("ProductsDelivered", 0);
