@@ -13,7 +13,7 @@ PlayerSettings:
   useOnDemandResources: 0
   accelerometerFrequency: 60
   companyName: Dilis
-  productName: "S\xE3o Braz - Roleta S\xE3o Joao"
+  productName: "Matuta - Roleta S\xE3o Joao"
   defaultCursor: {fileID: 0}
   cursorHotspot: {x: 0, y: 0}
   m_SplashScreenBackgroundColor: {r: 0.13725491, g: 0.12156863, b: 0.1254902, a: 1}
@@ -161,7 +161,7 @@ PlayerSettings:
   androidSupportedAspectRatio: 1
   androidMaxAspectRatio: 2.1
   applicationIdentifier:
-    Standalone: com.Dilis.S--o-Braz---Roleta-S--o-Joao
+    Standalone: com.Dilis.Matuta---Roleta-S--o-Joao
   buildNumber:
     Standalone: 0
     VisionOS: 0
@@ -286,7 +286,7 @@ PlayerSettings:
   - m_BuildTarget: 
     m_Icons:
     - serializedVersion: 2
-      m_Icon: {fileID: 2800000, guid: f6b9bc719e6962b46b7f1ff7960ea425, type: 3}
+      m_Icon: {fileID: 2800000, guid: f8dba920fb5a73e49bc2c00275a7461c, type: 3}
       m_Width: 128
       m_Height: 128
       m_Kind: 0

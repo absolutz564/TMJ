@@ -360,7 +360,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!224 &660272507
 RectTransform:
   m_ObjectHideFlags: 0
@@ -455,7 +455,7 @@ RectTransform:
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
   m_AnchoredPosition: {x: 0, y: -533}
-  m_SizeDelta: {x: 570, y: 160}
+  m_SizeDelta: {x: 590, y: 188}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &791282370
 MonoBehaviour:
@@ -557,7 +557,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_Sprite: {fileID: 21300000, guid: 63fbc81e6ffa7a4418a5f61ca62a3d11, type: 3}
+  m_Sprite: {fileID: 21300000, guid: 999eddc8757f745458737b1832c3203c, type: 3}
   m_Type: 0
   m_PreserveAspect: 0
   m_FillCenter: 1
@@ -854,7 +854,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: 0, y: -958.499}
+  m_AnchoredPosition: {x: 0, y: -963}
   m_SizeDelta: {x: 1080, y: 403}
   m_Pivot: {x: 0.5, y: 0}
 --- !u!114 &1013410142
@@ -877,7 +877,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_Sprite: {fileID: 21300000, guid: be8087b3416c0444d9bf94bcf4f131bc, type: 3}
+  m_Sprite: {fileID: 21300000, guid: 50bd1eafecafbe84fbedd569ed79ed77, type: 3}
   m_Type: 0
   m_PreserveAspect: 0
   m_FillCenter: 1
@@ -1327,7 +1327,7 @@ RectTransform:
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
   m_AnchoredPosition: {x: 0, y: -958.5}
-  m_SizeDelta: {x: 1080, y: 403}
+  m_SizeDelta: {x: 1080, y: 569}
   m_Pivot: {x: 0.5, y: 0}
 --- !u!114 &2059026696
 MonoBehaviour:
@@ -1349,7 +1349,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_Sprite: {fileID: 21300000, guid: 388e2a073a235154c8a136f8a1fa9ce6, type: 3}
+  m_Sprite: {fileID: 21300000, guid: 023d94fabe1ec8447af2075d8b577e72, type: 3}
   m_Type: 0
   m_PreserveAspect: 0
   m_FillCenter: 1
@@ -1447,7 +1447,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_Sprite: {fileID: 21300000, guid: cd95dd17a274266478cce8ca3d755f64, type: 3}
+  m_Sprite: {fileID: 21300000, guid: 0ca5b42e46f7ea44ba07e2e4cc40c8d2, type: 3}
   m_Type: 0
   m_PreserveAspect: 0
   m_FillCenter: 1
@@ -1477,6 +1477,10 @@ PrefabInstance:
       propertyPath: clockwiseStageDuration
       value: 5
       objectReference: {fileID: 0}
+    - target: {fileID: 1833142439152374679, guid: 0004f7c4dc0212743b72243d177a5bf1, type: 3}
+      propertyPath: m_Sprite
+      value: 
+      objectReference: {fileID: 21300000, guid: 5e052be8b51ce62409663ffbfe98cf86, type: 3}
     - target: {fileID: 1833142439340637749, guid: 0004f7c4dc0212743b72243d177a5bf1, type: 3}
       propertyPath: m_Name
       value: Roulette
@@ -1565,6 +1569,34 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 1833142439768911986, guid: 0004f7c4dc0212743b72243d177a5bf1, type: 3}
+      propertyPath: m_SizeDelta.x
+      value: 870
+      objectReference: {fileID: 0}
+    - target: {fileID: 1833142439768911986, guid: 0004f7c4dc0212743b72243d177a5bf1, type: 3}
+      propertyPath: m_SizeDelta.y
+      value: 870
+      objectReference: {fileID: 0}
+    - target: {fileID: 1833142439768911987, guid: 0004f7c4dc0212743b72243d177a5bf1, type: 3}
+      propertyPath: m_Sprite
+      value: 
+      objectReference: {fileID: 21300000, guid: 61503b4a42a0d9d4c8ad559e054565ed, type: 3}
+    - target: {fileID: 1833142439796848868, guid: 0004f7c4dc0212743b72243d177a5bf1, type: 3}
+      propertyPath: m_SizeDelta.x
+      value: 186
+      objectReference: {fileID: 0}
+    - target: {fileID: 1833142439796848868, guid: 0004f7c4dc0212743b72243d177a5bf1, type: 3}
+      propertyPath: m_SizeDelta.y
+      value: 186
+      objectReference: {fileID: 0}
+    - target: {fileID: 1833142439796848869, guid: 0004f7c4dc0212743b72243d177a5bf1, type: 3}
+      propertyPath: m_Sprite
+      value: 
+      objectReference: {fileID: 21300000, guid: f8dba920fb5a73e49bc2c00275a7461c, type: 3}
+    - target: {fileID: 1833142439840451626, guid: 0004f7c4dc0212743b72243d177a5bf1, type: 3}
+      propertyPath: m_Sprite
+      value: 
+      objectReference: {fileID: 21300000, guid: 566bb58aa40555742954a4a94cf6dc91, type: 3}
     - target: {fileID: 1833142440667474455, guid: 0004f7c4dc0212743b72243d177a5bf1, type: 3}
       propertyPath: m_LocalRotation.w
       value: 1
@@ -1585,6 +1617,10 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 1833142440667474472, guid: 0004f7c4dc0212743b72243d177a5bf1, type: 3}
+      propertyPath: m_Sprite
+      value: 
+      objectReference: {fileID: 21300000, guid: 733db129ba95caa44a7a45c634327623, type: 3}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
