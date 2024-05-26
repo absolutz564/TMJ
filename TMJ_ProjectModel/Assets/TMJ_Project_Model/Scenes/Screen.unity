@@ -773,7 +773,7 @@ MonoBehaviour:
   canLoad: 1
   loadNextSceneWithTime: 0
   loadTime: 3
-  nextSceneIndex: 1
+  nextSceneIndex: 2
   sceneLoadTimer: {fileID: 7125405929040587397}
 --- !u!1 &515838921 stripped
 GameObject:

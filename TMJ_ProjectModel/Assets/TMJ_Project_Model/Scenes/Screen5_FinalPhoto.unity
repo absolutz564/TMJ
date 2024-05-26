@@ -2410,7 +2410,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 7125405929072280550, guid: f5a316ce69b68464e908f9712fa52bc4, type: 3}
       propertyPath: nextSceneIndex
-      value: 0
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 7125405929072280550, guid: f5a316ce69b68464e908f9712fa52bc4, type: 3}
       propertyPath: loadNextSceneWithTime

@@ -184,7 +184,7 @@ namespace NekraliusDevelopmentStudio
             int height = Screen.height;
 
             //frameObject.SetActive(true);
-            //Border.SetActive(true);
+            Border.SetActive(true);
             //ObjectRect.localPosition = new Vector3(5.3f, 140, 0.40f);
             //ObjectRect.localScale = new Vector3(0.95f, 0.95f, 0.95f);
 
