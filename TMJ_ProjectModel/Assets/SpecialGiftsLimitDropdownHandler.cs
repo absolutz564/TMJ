@@ -47,6 +47,6 @@ public class SpecialGiftsTMPDropdownHandler : MonoBehaviour
     }
     public void LoadNextScene()
     {
-        SceneManager.LoadScene("Roulette");
+        SceneManager.LoadScene("Screen");
     }
 }
