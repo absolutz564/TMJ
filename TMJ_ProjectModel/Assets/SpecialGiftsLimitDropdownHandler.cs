@@ -52,7 +52,7 @@ public class SpecialGiftsTMPDropdownHandler : MonoBehaviour
     public IEnumerator WaitToNext()
     {
         yield return new WaitForSeconds(0.5f);
-        SceneManager.LoadScene("Roulette");
+        SceneManager.LoadScene("Screen");
     }
     public void LoadNextScene()
     {
