@@ -1,10 +1,13 @@
 using UnityEngine;
 using TMPro;
 using UnityEngine.SceneManagement;
+using System.Collections;
 
 public class SpecialGiftsTMPDropdownHandler : MonoBehaviour
 {
     public TMP_Dropdown tmpDropdown; // Referência ao TMP_Dropdown
+    public TMP_InputField textProductsLimit;
+    public TMP_InputField textSpecialGiftsLimit;
 
     private void Awake()
     {
@@ -45,8 +48,20 @@ public class SpecialGiftsTMPDropdownHandler : MonoBehaviour
         PlayerPrefs.SetInt("SpecialGiftsLimit", selectedValue);
         PlayerPrefs.Save(); // Salvar mudanças
     }
+
+    public IEnumerator WaitToNext()
+    {
+        yield return new WaitForSeconds(0.5f);
+        SceneManager.LoadScene("Roulette");
+    }
     public void LoadNextScene()
     {
-        SceneManager.LoadScene("Roulette");
+        int productsLimit = int.Parse(textProductsLimit.text);
+        PlayerPrefs.SetInt("ProductsLimit", productsLimit);
+
+        int SpecialGiftsLimit = int.Parse(textSpecialGiftsLimit.text);
+        PlayerPrefs.SetInt("GiftsLimit", SpecialGiftsLimit);
+
+        StartCoroutine(WaitToNext());
     }
 }

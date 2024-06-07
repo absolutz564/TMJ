@@ -21,7 +21,8 @@ namespace NekraliusDevelopmentStudio
 
         private void Start()
         {
-            //startSize = transform.localScale.magnitude;
+            currentSize = startSize;
+            transform.localScale = new Vector3(startSize, startSize, startSize);
         }
 
         private void Update() => SetScale();

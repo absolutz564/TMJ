@@ -1,3 +1,4 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
@@ -143,7 +144,7 @@ public class RouletteController : MonoBehaviour
     }
     private int GetRandomValue(List<int> randomRotateValues)
     {
-        int index = Random.Range(0, randomRotateValues.Count);
+        int index = UnityEngine.Random.Range(0, randomRotateValues.Count);
         return randomRotateValues[index];
     }
 
@@ -183,9 +184,14 @@ public class RouletteController : MonoBehaviour
     public IEnumerator WaitToEnd()
     {
         yield return new WaitForSeconds(2f);
-        if (PlayerPrefs.GetInt("Element") == 1 || PlayerPrefs.GetInt("Element") == 3)
+        Debug.Log(PlayerPrefs.GetInt("Element"));
+        if (PlayerPrefs.GetInt("Element") == 3)
         {
             SceneManager.LoadScene("Roulette");
+        }
+        else if (PlayerPrefs.GetInt("Element") == 1)
+        {
+            SceneManager.LoadScene("Screen");
         }
         else
         {

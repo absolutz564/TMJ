@@ -311,7 +311,7 @@ namespace NekraliusDevelopmentStudio
             }
         }
 
-        [SerializeField] public string urlVideo = "https://festverao-saobraz.dilisgs.com.br/video-upload/index.php";
+        [SerializeField] public string urlVideo = "https://colgate-sj2024.dilisgs.com.br/video-upload/index.php";
         [SerializeField] public string endpointVideo = "myvideo";
         [SerializeField] public string movedFolderVideo = "/uploaded_videos/";
         [SerializeField] public string idVideo = "_video_.mp4";

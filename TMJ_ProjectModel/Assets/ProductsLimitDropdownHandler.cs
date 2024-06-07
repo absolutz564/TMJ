@@ -4,7 +4,7 @@ using TMPro;
 public class ProductsLimitTMPDropdownHandler : MonoBehaviour
 {
     public TMP_Dropdown tmpDropdown; // Referência ao TMP_Dropdown
-
+    
     void Start()
     {
         // Inicializar o TMP_Dropdown com valores de 1 a 20
