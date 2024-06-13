@@ -37,10 +37,10 @@ namespace NekraliusDevelopmentStudio
         private void Update()
         {
             LoadNextSceneWithTime();
-            if (Input.anyKeyDown)
-            {
-                LoadNextScene();
-            }
+            //if (Input.anyKeyDown)
+            //{
+            //    LoadNextScene();
+            //}
         }
         #endregion
 

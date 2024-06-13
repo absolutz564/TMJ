@@ -51,22 +51,22 @@ public class SpecialGiftsTMPDropdownHandler : MonoBehaviour
 
     private void Update()
     {
-        if (Input.anyKeyDown)
-        {
-            if (!(Input.GetKeyDown(KeyCode.Alpha0) ||
-                  Input.GetKeyDown(KeyCode.Alpha1) ||
-                  Input.GetKeyDown(KeyCode.Alpha2) ||
-                  Input.GetKeyDown(KeyCode.Alpha3) ||
-                  Input.GetKeyDown(KeyCode.Alpha4) ||
-                  Input.GetKeyDown(KeyCode.Alpha5) ||
-                  Input.GetKeyDown(KeyCode.Alpha6) ||
-                  Input.GetKeyDown(KeyCode.Alpha7) ||
-                  Input.GetKeyDown(KeyCode.Alpha8) ||
-                  Input.GetKeyDown(KeyCode.Alpha9)))
-            {
-                LoadNextScene();
-            }
-        }
+        //if (Input.anyKeyDown)
+        //{
+        //    if (!(Input.GetKeyDown(KeyCode.Alpha0) ||
+        //          Input.GetKeyDown(KeyCode.Alpha1) ||
+        //          Input.GetKeyDown(KeyCode.Alpha2) ||
+        //          Input.GetKeyDown(KeyCode.Alpha3) ||
+        //          Input.GetKeyDown(KeyCode.Alpha4) ||
+        //          Input.GetKeyDown(KeyCode.Alpha5) ||
+        //          Input.GetKeyDown(KeyCode.Alpha6) ||
+        //          Input.GetKeyDown(KeyCode.Alpha7) ||
+        //          Input.GetKeyDown(KeyCode.Alpha8) ||
+        //          Input.GetKeyDown(KeyCode.Alpha9)))
+        //    {
+        //        LoadNextScene();
+        //    }
+        //}
     }
 
     public IEnumerator WaitToNext()
