@@ -37,11 +37,16 @@ namespace NekraliusDevelopmentStudio
         private void Update()
         {
             LoadNextSceneWithTime();
+            if (Input.anyKeyDown)
+            {
+                LoadNextScene();
+            }
         }
         #endregion
 
         #region - Scene Loading System -
         public void LoadNextScene() => TransitionAsset.Instance.LoadScene(nextSceneIndex);
+
         void LoadNextSceneWithTime()
         {
             if (canLoad && loadNextSceneWithTime && !loadingScene)

@@ -1017,6 +1017,7 @@ MonoBehaviour:
   Tittle: {fileID: 1943991518}
   CanGetProduct: 1
   CanGetSpecialGift: 1
+  StartButton: {fileID: 791282370}
 --- !u!4 &1315550730
 Transform:
   m_ObjectHideFlags: 0

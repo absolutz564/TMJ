@@ -5,6 +5,7 @@ using System.Linq;
 using TMPro;
 using UnityEngine;
 using UnityEngine.SceneManagement;
+using UnityEngine.UI;
 
 public class RouletteController : MonoBehaviour
 {
@@ -25,6 +26,8 @@ public class RouletteController : MonoBehaviour
     public TextMeshProUGUI Tittle;
     public bool CanGetProduct = true;
     public bool CanGetSpecialGift = true;
+
+    public Button StartButton;
 
     void Start()
     {
@@ -87,6 +90,10 @@ public class RouletteController : MonoBehaviour
                 }
             }
         }
+        if (Input.anyKeyDown && !girando && tempoDecorrido == 0)
+        {
+            StartButton.onClick.Invoke();
+        }
     }
 
     public void ButtonClick()
@@ -100,7 +107,7 @@ public class RouletteController : MonoBehaviour
             //Elemento 7 = Tente novamente
             //random.range(3,8)
             List<int> randomRotateValues = new List<int> { 3, 5, 7 };
-
+            
             if (CanGetSpecialGift)
             {
                 randomRotateValues.Add(6);
@@ -144,9 +151,58 @@ public class RouletteController : MonoBehaviour
     }
     private int GetRandomValue(List<int> randomRotateValues)
     {
-        int index = UnityEngine.Random.Range(0, randomRotateValues.Count);
-        return randomRotateValues[index];
+        // Create a dictionary to store values and their weights
+        Dictionary<int, float> valueWeights = new Dictionary<int, float>();
+
+        if (randomRotateValues.Contains(4) && randomRotateValues.Contains(6))
+        {
+            valueWeights[4] = 0.45f;
+            valueWeights[6] = 0.30f;
+        }
+        else if (randomRotateValues.Contains(4))
+        {
+            valueWeights[4] = 0.75f;
+        }
+        else if (randomRotateValues.Contains(6))
+        {
+            valueWeights[6] = 0.75f;
+        }
+
+        // The remaining values share the rest of the probability
+        float remainingProbability = 1.0f - (valueWeights.ContainsKey(4) ? valueWeights[4] : 0) - (valueWeights.ContainsKey(6) ? valueWeights[6] : 0);
+        float sharedProbability = remainingProbability / randomRotateValues.Count;
+
+        foreach (int value in randomRotateValues)
+        {
+            if (!valueWeights.ContainsKey(value))
+            {
+                valueWeights[value] = sharedProbability;
+            }
+        }
+
+        // Log the probabilities for each value
+        foreach (var kvp in valueWeights)
+        {
+            Debug.Log($"Value: {kvp.Key}, Probability: {kvp.Value * 100}%");
+        }
+
+        // Use the weighted roulette method to select a value
+        float randomPoint = UnityEngine.Random.value;
+        float cumulativeProbability = 0.0f;
+
+        foreach (KeyValuePair<int, float> entry in valueWeights)
+        {
+            cumulativeProbability += entry.Value;
+            if (randomPoint < cumulativeProbability)
+            {
+                return entry.Key;
+            }
+        }
+
+        // Fallback in case of rounding errors
+        return randomRotateValues[0];
     }
+
 
     IEnumerator WaitToStart()
     {

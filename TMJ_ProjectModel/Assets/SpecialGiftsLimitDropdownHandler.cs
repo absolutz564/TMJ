@@ -49,6 +49,26 @@ public class SpecialGiftsTMPDropdownHandler : MonoBehaviour
         PlayerPrefs.Save(); // Salvar mudanças
     }
 
+    private void Update()
+    {
+        if (Input.anyKeyDown)
+        {
+            if (!(Input.GetKeyDown(KeyCode.Alpha0) ||
+                  Input.GetKeyDown(KeyCode.Alpha1) ||
+                  Input.GetKeyDown(KeyCode.Alpha2) ||
+                  Input.GetKeyDown(KeyCode.Alpha3) ||
+                  Input.GetKeyDown(KeyCode.Alpha4) ||
+                  Input.GetKeyDown(KeyCode.Alpha5) ||
+                  Input.GetKeyDown(KeyCode.Alpha6) ||
+                  Input.GetKeyDown(KeyCode.Alpha7) ||
+                  Input.GetKeyDown(KeyCode.Alpha8) ||
+                  Input.GetKeyDown(KeyCode.Alpha9)))
+            {
+                LoadNextScene();
+            }
+        }
+    }
+
     public IEnumerator WaitToNext()
     {
         yield return new WaitForSeconds(0.5f);
@@ -56,12 +76,19 @@ public class SpecialGiftsTMPDropdownHandler : MonoBehaviour
     }
     public void LoadNextScene()
     {
-        int productsLimit = int.Parse(textProductsLimit.text);
-        PlayerPrefs.SetInt("ProductsLimit", productsLimit);
-
-        int SpecialGiftsLimit = int.Parse(textSpecialGiftsLimit.text);
-        PlayerPrefs.SetInt("GiftsLimit", SpecialGiftsLimit);
-
-        StartCoroutine(WaitToNext());
+        if (textProductsLimit.text.Length > 0)
+        {
+            int productsLimit = int.Parse(textProductsLimit.text);
+            PlayerPrefs.SetInt("ProductsLimit", productsLimit);
+        }
+        if (textSpecialGiftsLimit.text.Length > 0)
+        {
+            int SpecialGiftsLimit = int.Parse(textSpecialGiftsLimit.text);
+            PlayerPrefs.SetInt("SpecialGiftsLimit", SpecialGiftsLimit);
+        }
+        if (textProductsLimit.text.Length > 0 && textSpecialGiftsLimit.text.Length > 0)
+        {
+            StartCoroutine(WaitToNext());
+        }
     }
 }
